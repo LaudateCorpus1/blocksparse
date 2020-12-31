@@ -1,9 +1,10 @@
 # FROM tensorflow/tensorflow:1.15.2-gpu-py3
-FROM tensorflow/tensorflow:custom-op-gpu-ubuntu14
+FROM tensorflow/tensorflow:custom-op-gpu-ubuntu16
 RUN pip install --upgrade pip
 
 # Need this to run the tests
 RUN pip3 install networkx==2.5
+
 
 # ENV NCCL_VERSION=2.4.8-1+cuda10.0
 # RUN apt-get update && apt-get install -y --no-install-recommends \
