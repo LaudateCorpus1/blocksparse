@@ -7,7 +7,7 @@ NOTE:
 
 1) Build image
 ```
-$ docker image build -f Dockerfile-tf-1.13.1 --rm -t blocksparse:local-tf.1.13.1 .
+$ sudo docker image build -f Dockerfile-tf-1.13.1 --rm -t blocksparse:local-tf.1.13.1 .
 ```
 
 2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*
@@ -22,7 +22,7 @@ $ docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocks
 
 GPU
 ```
-$ docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
 ```
 
 3) Compile (inside the docker container)
