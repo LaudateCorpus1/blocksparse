@@ -36,6 +36,11 @@ TF_INC=$(shell python -c 'from os.path import dirname; import tensorflow as tf; 
 TF_LIB=$(shell python -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
 TF_ABI=$(shell python -c 'import tensorflow as tf; print(tf.__cxx11_abi_flag__ if "__cxx11_abi_flag__" in tf.__dict__ else 0)')
 
+TF_VERSION=$(shell python -c 'import tensorflow as tf; print(tf.__version__)')
+ifeq ($(TF_VERSION),1.15.2)
+	TF_LIB=$(shell python -c 'import tensorflow_core as tf; print(tf.sysconfig.get_lib())')
+endif
+
 CCFLAGS=-std=c++11 -O3 -fPIC -DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) \
 	-I$(TARGET) \
 	-I$(NV_INC) \
@@ -45,6 +50,14 @@ CCFLAGS=-std=c++11 -O3 -fPIC -DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) 
 	-I$(NCCL_INC) \
 	-I$(MPI_INC) \
 	-I/usr/local
+
+ifeq ($(TF_VERSION),1.15.2)
+	CCFLAGS +=-I$(TF_INC)/tensorflow_core/include
+endif
+
+test_env: 
+	@echo $(CCFLAGS)
+
 
 NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
  	-gencode=arch=compute_35,code=sm_35 \
@@ -58,45 +71,53 @@ NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPI
 
 OBJS=\
 	$(TARGET)/batch_norm_op.o \
-	$(TARGET)/blocksparse_conv_op.o \
-	$(TARGET)/blocksparse_kernels.o \
-	$(TARGET)/blocksparse_l2_norm_op.o \
-	$(TARGET)/blocksparse_matmul_op.o \
-	$(TARGET)/bst_op.o \
-	$(TARGET)/cwise_linear_op.o \
-	$(TARGET)/edge_bias_op.o \
-	$(TARGET)/ew_op.o \
-	$(TARGET)/gpu_types.o \
-	$(TARGET)/layer_norm_op.o \
-	$(TARGET)/lstm_op.o \
-	$(TARGET)/optimize_op.o \
-	$(TARGET)/quantize_op.o \
-	$(TARGET)/transformer_op.o \
-	$(TARGET)/embedding_op.o \
-	$(TARGET)/matmul_op.o \
-	$(TARGET)/nccl_op.o
+	$(TARGET)/blocksparse_conv_op.o
+
+# OBJS=\
+# 	$(TARGET)/batch_norm_op.o \
+# 	$(TARGET)/blocksparse_conv_op.o \
+# 	$(TARGET)/blocksparse_kernels.o \
+# 	$(TARGET)/blocksparse_l2_norm_op.o \
+# 	$(TARGET)/blocksparse_matmul_op.o \
+# 	$(TARGET)/bst_op.o \
+# 	$(TARGET)/cwise_linear_op.o \
+# 	$(TARGET)/edge_bias_op.o \
+# 	$(TARGET)/ew_op.o \
+# 	$(TARGET)/gpu_types.o \
+# 	$(TARGET)/layer_norm_op.o \
+# 	$(TARGET)/lstm_op.o \
+# 	$(TARGET)/optimize_op.o \
+# 	$(TARGET)/quantize_op.o \
+# 	$(TARGET)/transformer_op.o \
+# 	$(TARGET)/embedding_op.o \
+# 	$(TARGET)/matmul_op.o \
+# 	$(TARGET)/nccl_op.o
+
+# CU_OBJS=\
+# 	$(TARGET)/batch_norm_op_gpu.cu.o \
+# 	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o \
+# 	$(TARGET)/blocksparse_matmul_op_gpu.cu.o \
+# 	$(TARGET)/blocksparse_hgemm_cn_64_op_gpu.cu.o \
+# 	$(TARGET)/blocksparse_hgemm_cn_128_op_gpu.cu.o \
+# 	$(TARGET)/blocksparse_hgemm_nc_op_gpu.cu.o \
+# 	$(TARGET)/bst_hgemm_op_gpu.cu.o \
+# 	$(TARGET)/bst_sgemm_op_gpu.cu.o \
+# 	$(TARGET)/bst_softmax_op_gpu.cu.o \
+# 	$(TARGET)/cwise_linear_op_gpu.cu.o \
+# 	$(TARGET)/edge_bias_op_gpu.cu.o \
+# 	$(TARGET)/ew_op_gpu.cu.o \
+# 	$(TARGET)/layer_norm_cn_op_gpu.cu.o \
+# 	$(TARGET)/layer_norm_nc_op_gpu.cu.o \
+# 	$(TARGET)/lstm_op_gpu.cu.o \
+# 	$(TARGET)/optimize_op_gpu.cu.o \
+# 	$(TARGET)/quantize_op_gpu.cu.o \
+# 	$(TARGET)/transformer_op_gpu.cu.o \
+# 	$(TARGET)/embedding_op_gpu.cu.o \
+# 	$(TARGET)/matmul_op_gpu.cu.o
 
 CU_OBJS=\
 	$(TARGET)/batch_norm_op_gpu.cu.o \
-	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o \
-	$(TARGET)/blocksparse_matmul_op_gpu.cu.o \
-	$(TARGET)/blocksparse_hgemm_cn_64_op_gpu.cu.o \
-	$(TARGET)/blocksparse_hgemm_cn_128_op_gpu.cu.o \
-	$(TARGET)/blocksparse_hgemm_nc_op_gpu.cu.o \
-	$(TARGET)/bst_hgemm_op_gpu.cu.o \
-	$(TARGET)/bst_sgemm_op_gpu.cu.o \
-	$(TARGET)/bst_softmax_op_gpu.cu.o \
-	$(TARGET)/cwise_linear_op_gpu.cu.o \
-	$(TARGET)/edge_bias_op_gpu.cu.o \
-	$(TARGET)/ew_op_gpu.cu.o \
-	$(TARGET)/layer_norm_cn_op_gpu.cu.o \
-	$(TARGET)/layer_norm_nc_op_gpu.cu.o \
-	$(TARGET)/lstm_op_gpu.cu.o \
-	$(TARGET)/optimize_op_gpu.cu.o \
-	$(TARGET)/quantize_op_gpu.cu.o \
-	$(TARGET)/transformer_op_gpu.cu.o \
-	$(TARGET)/embedding_op_gpu.cu.o \
-	$(TARGET)/matmul_op_gpu.cu.o
+	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o
 
 $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	mkdir -p $(shell dirname $@)

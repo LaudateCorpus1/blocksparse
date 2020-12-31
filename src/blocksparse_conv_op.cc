@@ -1,3 +1,4 @@
+// #define EIGEN_USE_GPU
 
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -5,7 +6,8 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+// #include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "tensorflow/core/util/gpu_kernel_helper.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +22,9 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
+// using perftools::gputools::cuda::CUDAStream;
+
+// using GPUDevice = Eigen::GpuDevice;
 
 Status GetKernel(std::string& kernel_name, CUfunction* kernel);
 
@@ -319,7 +323,8 @@ class BlocksparseConvOp : public OpKernel {
 
     OP_REQUIRES_OK(ctx, GetKernel(kernel_name_, &kernel_));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    // CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream  stream = GetGpuStream(ctx);
 
     void *args[] = {
       &grid_ptr, &mpq_ptr, &ck_ptr, &c_ptr, &a_ptr, &b_ptr, &alpha,
