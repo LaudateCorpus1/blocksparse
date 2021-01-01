@@ -6,7 +6,6 @@
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
 #include "gpu_types.h"
-#include "tensorflow/core/util/gpu_kernel_helper.h"
 
 using namespace tensorflow;
 
