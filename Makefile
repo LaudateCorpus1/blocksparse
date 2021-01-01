@@ -65,14 +65,14 @@ PYTHON_BIN_PATH = python3
 TF_CFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 
 NVCCFLAGS=-D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
-	-g $(TF_CFLAGS) -x cu -DNDEBUG --expt-relaxed-constexpr \
- 	-gencode=arch=compute_35,code=sm_35 \
-	-gencode=arch=compute_50,code=sm_50 \
-	-gencode=arch=compute_52,code=sm_52 \
- 	-gencode=arch=compute_60,code=sm_60 \
-	-gencode=arch=compute_61,code=sm_61 \
- 	-gencode=arch=compute_70,code=sm_70 \
- 	-gencode=arch=compute_70,code=compute_70
+	-g $(TF_CFLAGS) -x cu -DNDEBUG --expt-relaxed-constexpr
+ 	# -gencode=arch=compute_35,code=sm_35 \
+	# -gencode=arch=compute_50,code=sm_50 \
+	# -gencode=arch=compute_52,code=sm_52 \
+ 	# -gencode=arch=compute_60,code=sm_60 \
+	# -gencode=arch=compute_61,code=sm_61 \
+ 	# -gencode=arch=compute_70,code=sm_70 \
+ 	# -gencode=arch=compute_70,code=compute_70
 #   --keep --keep-dir tmp
 
 OBJS=\
