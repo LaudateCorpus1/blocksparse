@@ -24,8 +24,6 @@ using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
 // using perftools::gputools::cuda::CUDAStream;
 
-// using GPUDevice = Eigen::GpuDevice;
-
 Status GetKernel(std::string& kernel_name, CUfunction* kernel);
 
 Status BlocksparseConvShape(InferenceContext* ctx)
