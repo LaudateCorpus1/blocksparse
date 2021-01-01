@@ -70,8 +70,7 @@ NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPI
 #   --keep --keep-dir tmp
 
 OBJS=\
-	$(TARGET)/batch_norm_op.o \
-	$(TARGET)/blocksparse_conv_op.o
+	$(TARGET)/batch_norm_op.o
 
 # OBJS=\
 # 	$(TARGET)/batch_norm_op.o \
@@ -116,8 +115,7 @@ OBJS=\
 # 	$(TARGET)/matmul_op_gpu.cu.o
 
 CU_OBJS=\
-	$(TARGET)/batch_norm_op_gpu.cu.o \
-	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o
+	$(TARGET)/batch_norm_op_gpu.cu.o
 
 $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	mkdir -p $(shell dirname $@)
