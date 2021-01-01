@@ -58,8 +58,12 @@ endif
 test_env: 
 	@echo $(CCFLAGS)
 
+#  -g  $(TF_CFLAGS)  -x cu -DNDEBUG --expt-relaxed-constexpr
 
-NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
+TF_CFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
+
+NVCCFLAGS=-D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
+	-g $(TF_CFLAGS) -x cu \
  	-gencode=arch=compute_35,code=sm_35 \
 	-gencode=arch=compute_50,code=sm_50 \
 	-gencode=arch=compute_52,code=sm_52 \
@@ -131,6 +135,8 @@ $(TARGET)/%.cu.o: src/%.cu $(TARGET)/blocksparse_kernels.h
 $(TARGET)/%.o: src/%.cc src/*.h $(TARGET)/blocksparse_kernels.h
 	mkdir -p $(shell dirname $@)
 	g++ $(CCFLAGS) -c $< -o $@
+
+
 
 
 # bazel-0.17.1-installer-linux-x86_64.sh (--user)

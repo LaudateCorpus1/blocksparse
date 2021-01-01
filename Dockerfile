@@ -25,3 +25,4 @@ RUN ln -s /usr/local/cuda/include /usr/local/lib/python3.6/dist-packages/tensorf
 
 # Make sure the linker knows where to look for things
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+
