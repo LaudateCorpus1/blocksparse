@@ -15,13 +15,12 @@ RUN ln -s /usr/local/cuda/include /usr/local/lib/python3.6/dist-packages/tensorf
 
 
 
-# ENV NCCL_VERSION=2.4.8-1+cuda10.0
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#   mpich \
-#   libmpich-dev \
-#   libnccl2=${NCCL_VERSION} \
-#   libnccl-dev=${NCCL_VERSION} \
-#   curl
+ENV NCCL_VERSION=2.4.8-1+cuda10.0
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  mpich \
+  libmpich-dev \
+  libnccl2=${NCCL_VERSION} \
+  libnccl-dev=${NCCL_VERSION}
 
 # Make sure the linker knows where to look for things
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
