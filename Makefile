@@ -60,9 +60,7 @@ test_env:
 
 #  -g  $(TF_CFLAGS)  -x cu -DNDEBUG --expt-relaxed-constexpr
 
-PYTHON_BIN_PATH = python3
-
-TF_CFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
+TF_CFLAGS := $(shell python -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 
 NVCCFLAGS=-D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
 	-g $(TF_CFLAGS) -x cu -DNDEBUG --expt-relaxed-constexpr \
@@ -74,6 +72,9 @@ NVCCFLAGS=-D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fP
  	-gencode=arch=compute_70,code=sm_70 \
  	-gencode=arch=compute_70,code=compute_70
 #   --keep --keep-dir tmp
+
+TF_LFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
+LDFLAGS = -shared ${TF_LFLAGS}
 
 OBJS=\
 	$(TARGET)/batch_norm_op.o
@@ -127,8 +128,14 @@ $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	mkdir -p $(shell dirname $@)
 	python generate_kernels.py
 
+# blocksparse/blocksparse_ops.so: $(OBJS) $(CU_OBJS)
+# 	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) -ltensorflow_framework -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi 
+
 blocksparse/blocksparse_ops.so: $(OBJS) $(CU_OBJS)
-	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) -ltensorflow_framework -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi
+	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) ${LDFLAGS}  -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi 
+
+
+# $(CFLAGS) -o $@ $^ ${LDFLAGS}  -D GOOGLE_CUDA=1  -I/usr/local/cuda/targets/x86_64-linux/include -L/usr/local/cuda/targets/x86_64-linux/lib -lcudart
 
 $(TARGET)/%.cu.o: src/%.cu $(TARGET)/blocksparse_kernels.h
 	mkdir -p $(shell dirname $@)
