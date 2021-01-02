@@ -1,7 +1,4 @@
 
-#define EIGEN_USE_GPU
-#include "tensorflow/core/util/gpu_kernel_helper.h"
-
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/shape_inference.h"
