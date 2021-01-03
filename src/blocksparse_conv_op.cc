@@ -320,8 +320,7 @@ class BlocksparseConvOp : public OpKernel {
 
     OP_REQUIRES_OK(ctx, GetKernel(kernel_name_, &kernel_));
 
-    // CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
-    CUstream  stream = GetGpuStream(ctx);
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
 
     void *args[] = {
       &grid_ptr, &mpq_ptr, &ck_ptr, &c_ptr, &a_ptr, &b_ptr, &alpha,
