@@ -43,8 +43,8 @@ ifeq ($(TF_VERSION),1.15.2)
 	TF_NEW=1
 endif
 
-CCFLAGS=-std=c++11 -O3 -fPIC -D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) \
-	TF_NEW=$(TF_NEW) \
+CCFLAGS=-std=c++11 -O3 -fPIC -DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) \
+	-DTF_NEW=$(TF_NEW) \
 	-I$(TARGET) \
 	-I$(NV_INC) \
 	-I$(TF_INC)/tensorflow/include \
@@ -65,7 +65,7 @@ test_env:
 
 TF_CFLAGS := $(shell python -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 
-NVCCFLAGS=-D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
+NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
 	-g $(TF_CFLAGS) -x cu -DNDEBUG --expt-relaxed-constexpr \
  	-gencode=arch=compute_35,code=sm_35 \
 	-gencode=arch=compute_50,code=sm_50 \
