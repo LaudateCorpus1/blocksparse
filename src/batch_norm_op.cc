@@ -5,6 +5,13 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
+
+#if TF_NEW
+#include "cuda_stream.h"
+#else
+#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#endif
+
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -12,11 +19,11 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
+using perftools::gputools::cuda::CUDAStream;
 
 template <typename T> bool BatchNormNCDHW_Inference(
-  T* y, const float* m, const float* v, const T* x, const float* g, const float* b,
+  CUstream stream, T* y, const float* m, const float* v, const T* x, const float* g, const float* b,
   int N, int C, int DHW, float epsilon);
-
 
 REGISTER_OP("BatchNormInferenceNCDHW")
     .Input("x: T")
@@ -65,7 +72,9 @@ class BatchNormInferenceNCDHWOp : public OpKernel {
     const float* m_ptr = m.flat<float>().data();
     const float* v_ptr = v.flat<float>().data();
 
-    BatchNormNCDHW_Inference<V>(y_ptr, m_ptr, v_ptr, x_ptr, g_ptr, b_ptr, N, C, DHW_, eps_);
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+
+    BatchNormNCDHW_Inference<V>(stream, y_ptr, m_ptr, v_ptr, x_ptr, g_ptr, b_ptr, N, C, DHW_, eps_);
   }
   int   DHW_;
   float eps_;
@@ -77,7 +86,7 @@ REGISTER_KERNEL_BUILDER(Name("BatchNormInferenceNCDHW").Device(DEVICE_GPU).TypeC
 
 
 template <typename T> bool BatchNormNCDHW_Forward(
-  T* y, float* m, float* v, const T* x, const float* g, const float* b,
+  CUstream stream, T* y, float* m, float* v, const T* x, const float* g, const float* b,
   int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
 REGISTER_OP("BatchNormNCDHW")
@@ -135,7 +144,9 @@ class BatchNormNCDHWOp : public OpKernel {
     const float* g_ptr = g.flat<float>().data();
     const float* b_ptr = b.flat<float>().data();
 
-    BatchNormNCDHW_Forward<V>(y_ptr, m_ptr, v_ptr, x_ptr, g_ptr, b_ptr, N, C, DHW_, magic_DHW_, shift_DHW_, eps_);
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+
+    BatchNormNCDHW_Forward<V>(stream, y_ptr, m_ptr, v_ptr, x_ptr, g_ptr, b_ptr, N, C, DHW_, magic_DHW_, shift_DHW_, eps_);
   }
   int DHW_, magic_DHW_, shift_DHW_;
   float eps_;
@@ -145,9 +156,8 @@ REGISTER_KERNEL_BUILDER(Name("BatchNormNCDHW").Device(DEVICE_GPU).TypeConstraint
 REGISTER_KERNEL_BUILDER(Name("BatchNormNCDHW").Device(DEVICE_GPU).TypeConstraint<BHALF>("T"),BatchNormNCDHWOp<BHALF,bhalf>);
 
 
-
 template <typename TX, typename TY> bool BatchNormNCDHW_Backward(
-  TY* dx, float* dg, float* db, const TY* dy, const TX* x, const float* g, const float* m, const float* v,
+  CUstream stream, TY* dx, float* dg, float* db, const TY* dy, const TX* x, const float* g, const float* m, const float* v,
   int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
 REGISTER_OP("BatchNormGradNCDHW")
@@ -213,7 +223,9 @@ class BatchNormGradNCDHWOp : public OpKernel {
     const float*  m_ptr = m.flat<float>().data();
     const float*  v_ptr = v.flat<float>().data();
 
-    BatchNormNCDHW_Backward<VX,VY>(dx_ptr, dg_ptr, db_ptr, dy_ptr, x_ptr, g_ptr, m_ptr, v_ptr, N, C, DHW_, magic_DHW_, shift_DHW_, eps_);
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+
+    BatchNormNCDHW_Backward<VX,VY>(stream, dx_ptr, dg_ptr, db_ptr, dy_ptr, x_ptr, g_ptr, m_ptr, v_ptr, N, C, DHW_, magic_DHW_, shift_DHW_, eps_);
   }
   int   DHW_, magic_DHW_, shift_DHW_;
   float eps_;

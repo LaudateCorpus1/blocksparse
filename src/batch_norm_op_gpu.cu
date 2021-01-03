@@ -1,4 +1,3 @@
-
 #if GOOGLE_CUDA
 
 #include "ew_op_gpu.h"
@@ -56,7 +55,7 @@ __global__ void __launch_bounds__(THREADS) batchnorm_inference_ncdhw(
     }
 }
 template <typename T>
-bool BatchNormNCDHW_Inference(
+bool BatchNormNCDHW_Inference(CUstream stream,
               T* y,
     const float* m,
     const float* v,
@@ -68,14 +67,14 @@ bool BatchNormNCDHW_Inference(
     int CDHW = C*DHW;
     dim3 grid(C, N, 1);
     if      (DHW < 128*8)
-        batchnorm_inference_ncdhw<T, 32><<<grid,  32, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
+        batchnorm_inference_ncdhw<T, 32><<<grid,  32, 0, stream>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
     else if (DHW < 512*8)
-        batchnorm_inference_ncdhw<T,128><<<grid, 128, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
+        batchnorm_inference_ncdhw<T,128><<<grid, 128, 0, stream>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
     else
-        batchnorm_inference_ncdhw<T,512><<<grid, 512, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
+        batchnorm_inference_ncdhw<T,512><<<grid, 512, 0, stream>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
     return true; // TODO
 }
-template bool BatchNormNCDHW_Inference<float>(
+template bool BatchNormNCDHW_Inference<float>(CUstream stream,
           float* y,
     const float* m,
     const float* v,
@@ -84,7 +83,7 @@ template bool BatchNormNCDHW_Inference<float>(
     const float* b,
     int N, int C, int DHW, float epsilon);
 
-template bool BatchNormNCDHW_Inference<ehalf>(
+template bool BatchNormNCDHW_Inference<ehalf>(CUstream stream,
           ehalf* y,
     const float* m,
     const float* v,
@@ -93,7 +92,7 @@ template bool BatchNormNCDHW_Inference<ehalf>(
     const float* b,
     int N, int C, int DHW, float epsilon);
 
-template bool BatchNormNCDHW_Inference<bhalf>(
+template bool BatchNormNCDHW_Inference<bhalf>(CUstream stream,
           bhalf* y,
     const float* m,
     const float* v,
@@ -216,7 +215,7 @@ __global__ void __launch_bounds__(THREADS) batchnorm_forward_ncdhw(
     }
 }
 template <typename T>
-bool BatchNormNCDHW_Forward(
+bool BatchNormNCDHW_Forward(CUstream stream,
               T* y,
           float* m,
           float* v,
@@ -229,14 +228,14 @@ bool BatchNormNCDHW_Forward(
     int CDHW = C*DHW;
     float rcpNDHW = 1.0f / (float)NDHW;
     if      (NDHW <  256*8)
-        batchnorm_forward_ncdhw<T,  64><<<C,  64,0>>>(y, m, v, x, g, b, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
+        batchnorm_forward_ncdhw<T,  64><<<C,  64,0,stream>>>(y, m, v, x, g, b, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
     else if (NDHW < 1024*8)
-        batchnorm_forward_ncdhw<T, 256><<<C, 256,0>>>(y, m, v, x, g, b, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
+        batchnorm_forward_ncdhw<T, 256><<<C, 256,0,stream>>>(y, m, v, x, g, b, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
     else
-        batchnorm_forward_ncdhw<T,1024><<<C,1024,0>>>(y, m, v, x, g, b, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
+        batchnorm_forward_ncdhw<T,1024><<<C,1024,0,stream>>>(y, m, v, x, g, b, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
     return true; // TODO
 }
-template bool BatchNormNCDHW_Forward<float>(
+template bool BatchNormNCDHW_Forward<float>(CUstream stream,
           float* y,
           float* m,
           float* v,
@@ -245,7 +244,7 @@ template bool BatchNormNCDHW_Forward<float>(
     const float* b,
     int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
-template bool BatchNormNCDHW_Forward<ehalf>(
+template bool BatchNormNCDHW_Forward<ehalf>(CUstream stream,
           ehalf* y,
           float* m,
           float* v,
@@ -254,7 +253,7 @@ template bool BatchNormNCDHW_Forward<ehalf>(
     const float* b,
     int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
-template bool BatchNormNCDHW_Forward<bhalf>(
+template bool BatchNormNCDHW_Forward<bhalf>(CUstream stream,
           bhalf* y,
           float* m,
           float* v,
@@ -366,7 +365,7 @@ __global__ void __launch_bounds__(THREADS) batchnorm_backward_ncdhw(
     }
 }
 template <typename TX, typename TY>
-bool BatchNormNCDHW_Backward(
+bool BatchNormNCDHW_Backward(CUstream stream,
              TY* dx,
           float* dg,
           float* db,
@@ -381,14 +380,14 @@ bool BatchNormNCDHW_Backward(
     int CDHW = C*DHW;
     float rcpNDHW = 1.0f / (float)NDHW;
     if      (NDHW <  256*8)
-        batchnorm_backward_ncdhw<TX,TY,  64><<<C,  64,0>>>(dx, dg, db, dy, x, g, m, v, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
+        batchnorm_backward_ncdhw<TX,TY,  64><<<C,  64,0,stream>>>(dx, dg, db, dy, x, g, m, v, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
     else if (NDHW < 1024*8)
-        batchnorm_backward_ncdhw<TX,TY, 256><<<C, 256,0>>>(dx, dg, db, dy, x, g, m, v, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
+        batchnorm_backward_ncdhw<TX,TY, 256><<<C, 256,0,stream>>>(dx, dg, db, dy, x, g, m, v, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
     else
-        batchnorm_backward_ncdhw<TX,TY,1024><<<C,1024,0>>>(dx, dg, db, dy, x, g, m, v, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
+        batchnorm_backward_ncdhw<TX,TY,1024><<<C,1024,0,stream>>>(dx, dg, db, dy, x, g, m, v, CDHW, NDHW, DHW, magic_DHW, shift_DHW, rcpNDHW, epsilon);
     return true; // TODO
 }
-template bool BatchNormNCDHW_Backward<float,float>(
+template bool BatchNormNCDHW_Backward<float,float>(CUstream stream,
           float* dx,
           float* dg,
           float* db,
@@ -399,7 +398,7 @@ template bool BatchNormNCDHW_Backward<float,float>(
     const float* v,
     int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
-template bool BatchNormNCDHW_Backward<ehalf,ehalf>(
+template bool BatchNormNCDHW_Backward<ehalf,ehalf>(CUstream stream,
           ehalf* dx,
           float* dg,
           float* db,
@@ -410,7 +409,7 @@ template bool BatchNormNCDHW_Backward<ehalf,ehalf>(
     const float* v,
     int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
-template bool BatchNormNCDHW_Backward<ehalf,float>(
+template bool BatchNormNCDHW_Backward<ehalf,float>(CUstream stream,
           float* dx,
           float* dg,
           float* db,
@@ -421,7 +420,7 @@ template bool BatchNormNCDHW_Backward<ehalf,float>(
     const float* v,
     int N, int C, int DHW, int magic_DHW, int shift_DHW, float epsilon);
 
-template bool BatchNormNCDHW_Backward<bhalf,bhalf>(
+template bool BatchNormNCDHW_Backward<bhalf,bhalf>(CUstream stream,
           bhalf* dx,
           float* dg,
           float* db,
