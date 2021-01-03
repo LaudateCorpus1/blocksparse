@@ -1,6 +1,7 @@
 # Kite usage, read first
 
-## Manual build for tf 1.15.2
+## TF 1.15.2
+###  Manual build
 NOTE:
 - commands prefixed by `$` should be run in a shell on the host machine
 - commands prefixed by `#` should be run in an interactive shell in the docker container
@@ -10,9 +11,20 @@ NOTE:
 $ sudo docker image build -f Dockerfile --rm -t blocksparse:local .
 ```
 
-2) Start docker container with an interactive shell and gpu access (we use the -u flag to ensure that the build artifacts have the correct host user information/permissions)
+2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*. 
+We use the -u flag to ensure that the build artifacts have the correct host user information/permissions.
+
+CPU
+- the tests below will fail if you try to run them without GPU support
+- the `ln` command should be run inside the docker container
 ```
-$ docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local
+$ sudo docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local
+# ln -s /usr/local/cuda/compat/libcuda.so /usr/lib/libcuda.so
+```
+
+GPU
+```
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local
 ```
 
 3) Compile (inside the docker container)
@@ -20,42 +32,47 @@ $ docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir 
 # make compile
 ```
 
-4) Install compiled version (inside the docker container)
+4) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
+we can do a pip install.
 ```
+# exit
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local
 # pip3 install dist/*.whl
 ```
 
 5) Test compiled version (inside the docker container)
 ```
 # test/blocksparse_matmul_test.py
-# test/blocksparse_conv_test.py
 ```
 
+### Tests
+- No new tests fail, the tests noted below still fail, except for the `test/nccl_test.py` test which now passes.
 
-
-## Manual build for tf 1.13.1
+## TF 1.13.1
+###  Manual build
 NOTE:
 - commands prefixed by `$` should be run in a shell on the host machine
 - commands prefixed by `#` should be run in an interactive shell in the docker container
 
 1) Build image
 ```
-$ docker image build -f Dockerfile-tf-1.13.1 --rm -t blocksparse:local-tf.1.13.1 .
+$ sudo docker image build -f Dockerfile-tf-1.13.1 --rm -t blocksparse:local-tf.1.13.1 .
 ```
 
-2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*
+2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*. 
+We use the -u flag to ensure that the build artifacts have the correct host user information/permissions.
 
 CPU
 - the tests below will fail if you try to run them without GPU support
 - the `ln` command should be run inside the docker container
 ```
-$ docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
+$ sudo docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local-tf.1.13.1
 # ln -s /usr/local/cuda/compat/libcuda.so /usr/lib/libcuda.so
 ```
 
 GPU
 ```
-$ docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local-tf.1.13.1
 ```
 
 3) Compile (inside the docker container)
@@ -63,16 +80,36 @@ $ docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir 
 # make compile
 ```
 
-4) Install compiled version (inside the docker container)
+4) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
+we can do a pip install.
 ```
+# exit
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
 # pip3 install dist/*.whl
 ```
 
 5) Test compiled version (inside the docker container)
 ```
 # test/blocksparse_matmul_test.py
-# test/blocksparse_conv_test.py
 ```
+
+### Tests
+- No new tests fail, the tests noted below still fail, except for the `test/nccl_test.py` test which now passes.
+
+
+## Known test failures
+As far as I can tell, the following tests have always failed on our builds. I determined this by
+checking out commit `3ead98d761cd15095fe8198881490d2acbbd0706` and then building using the instructions for
+TF 1.13.1 above.
+- `test/blocksparse_conv_test.py` -- originally got an error complaining that the `lut` argument was type int32 intstead of int64, then once I fixed this in conv.py via casting,
+  the tests failed with 99.9% of the values mismatched.
+- `test/blocksparse_matmul_bench.py` -- fails with "got an unexpected keyword argument 'dw_dtype'".
+- `test/blocksparse_reduced_dw_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
+- `test/blocksparse_transformer_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
+- `test/edge_bias.py` -- hangs and nothing ever happens.
+- `test/nccl_test.py` -- fails with "AttributeError: module 'a9a37b9e0fcca4488628a1751af42d7d' has no attribute 'allreduce_nccl'". This actually makes sense since in this
+  commit the compile step has all of the nccl stuff commented out.
+- `test/quantize_test.py` -- fails with "FileNotFoundError: [Errno 2] No such file or directory: '/home/scott/quant_log.txt'", changed the logfile to `./quant_log.txt` then it works.
 
 
 # Original README.md below
