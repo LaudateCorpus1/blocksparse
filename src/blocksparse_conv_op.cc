@@ -6,13 +6,13 @@
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
 
-// #if TF_NEW
-// #include "cuda_stream.h"
-// #else
-// #include "tensorflow/stream_executor/cuda/cuda_stream.h"
-// #endif
+#if TF_NEW
+#include "cuda_stream.h"
+#else
+#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#endif
 
-#include <cuda.h>
+// #include <cuda.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +27,7 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-// using perftools::gputools::cuda::CUDAStream;
+using perftools::gputools::cuda::CUDAStream;
 
 Status GetKernel(std::string& kernel_name, CUfunction* kernel);
 
@@ -326,8 +326,8 @@ class BlocksparseConvOp : public OpKernel {
 
     OP_REQUIRES_OK(ctx, GetKernel(kernel_name_, &kernel_));
 
-    // CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
-    CUstream stream = *(reinterpret_cast<CUstream*>(ctx->op_device_context()->stream()->implementation()->GpuStreamMemberHack()));
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    // CUstream stream = *(reinterpret_cast<CUstream*>(ctx->op_device_context()->stream()->implementation()->GpuStreamMemberHack()));
 
     void *args[] = {
       &grid_ptr, &mpq_ptr, &ck_ptr, &c_ptr, &a_ptr, &b_ptr, &alpha,
