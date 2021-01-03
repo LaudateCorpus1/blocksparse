@@ -1,6 +1,7 @@
 # Kite usage, read first
 
-## Manual build for tf 1.13.1
+## TF 1.13.1
+###  Manual build
 NOTE:
 - commands prefixed by `$` should be run in a shell on the host machine
 - commands prefixed by `#` should be run in an interactive shell in the docker container
@@ -41,6 +42,23 @@ $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working
 # test/blocksparse_matmul_test.py
 # test/blocksparse_conv_test.py
 ```
+
+### Known test failures
+No new tests fail, the tests noted below still fail.
+
+
+## Known test failures
+As far as I can tell, the following tests have always failed on our builds. I determined this by
+checking out commit `3ead98d761cd15095fe8198881490d2acbbd0706` and then building using the instructions for
+TF 1.13.1 above.
+- `test/blocksparse_conv_test.py` -- originally got an error complaining that the `lut` argument was type int32 intstead of int64, then once I fixed this in conv.py via casting,
+  the tests failed with 99.9% of the values mismatched.
+- `test/blocksparse_matmul_bench.py` -- fails with "got an unexpected keyword argument 'dw_dtype'".
+- `test/blocksparse_reduced_dw_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
+- `test/blocksparse_transformer_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
+- `test/edge_bias.py` -- hangs and nothing ever happens.
+- `test/nccl_test.py` -- fails with "AttributeError: module 'a9a37b9e0fcca4488628a1751af42d7d' has no attribute 'allreduce_nccl'".
+- `test/quantize_test.py` -- fails with "FileNotFoundError: [Errno 2] No such file or directory: '/home/scott/quant_log.txt'", changed the logfile to `./quant_log.txt` then it works.
 
 
 # Original README.md below

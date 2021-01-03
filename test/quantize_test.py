@@ -62,7 +62,7 @@ class QuantizeTest(tf.test.TestCase):
                     mode       = 0,
                     bias_pad   = 0,
                     stdv_mul   = 4.0,
-                    logfile    = "/home/scott/quant_log.txt",
+                    logfile    = "./quant_log.txt",
                 )
 
                 y = bs.quantize(x, qspec)

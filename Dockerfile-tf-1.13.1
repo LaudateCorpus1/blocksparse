@@ -4,6 +4,7 @@ RUN pip3 install tensorflow-gpu==1.13.1
 
 # Need this to run the tests
 RUN pip3 install networkx==2.5
+RUN pip3 install mpi4py==3.0.3
 
 ENV NCCL_VERSION=2.4.8-1+cuda10.0
 RUN apt-get update && apt-get install -y --allow-downgrades --no-install-recommends \
