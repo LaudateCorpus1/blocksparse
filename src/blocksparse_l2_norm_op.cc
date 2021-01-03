@@ -240,7 +240,7 @@ class L2NormalizeGainKCTRSOp : public OpKernel {
   }
   virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
 
-    return L2NormalizeKCTRS<VY,VX>(sy, sum_sqr_x, x, g, lut, epsilon, K);
+    return L2NormalizeKCTRS<VY,VX>(y, sum_sqr_x, x, g, lut, epsilon, K);
   }
   float epsilon_;
   int   K_;
