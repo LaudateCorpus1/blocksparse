@@ -5,6 +5,13 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
+
+#if TF_NEW
+#include "cuda_stream.h"
+#else
+#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#endif
+
 #include "gpu_types.h"
 
 
@@ -13,10 +20,11 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
+using perftools::gputools::cuda::CUDAStream;
 
-template <typename TY, typename TX> bool L2NormalizeKCTRS(TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K);
-template <typename TY, typename TX> bool L2NormalizeCKTRS(TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template <typename TY, typename TX> bool L2NormalizeCK   (TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize_);
+template <typename TY, typename TX> bool L2NormalizeKCTRS(CUstream stream, TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K);
+template <typename TY, typename TX> bool L2NormalizeCKTRS(CUstream stream, TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template <typename TY, typename TX> bool L2NormalizeCK   (CUstream stream, TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize_);
 
 Status L2NormalizeShape(InferenceContext* ctx)
 {
@@ -102,11 +110,13 @@ class L2NormalizeKCTRSOp : public OpKernel {
     const    VX*     x_ptr = (const VX*)x.flat<TX>().data();
     const   int*   lut_ptr = (const int*)lut.flat<int64>().data();
 
-    this->L2Normalize(y_ptr, sum_x_ptr, x_ptr, lut_ptr, epsilon_, K_);
-  }
-  virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const int* lut, float epsilon, int K) {
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
 
-    return L2NormalizeKCTRS<VY,VX>(y, sum_sqr_x, x, 0, lut, epsilon, K);
+    this->L2Normalize(stream, y_ptr, sum_x_ptr, x_ptr, lut_ptr, epsilon_, K_);
+  }
+  virtual bool L2Normalize(CUstream stream, VY* y, float* sum_sqr_x, const VX* x, const int* lut, float epsilon, int K) {
+
+    return L2NormalizeKCTRS<VY,VX>(stream, y, sum_sqr_x, x, 0, lut, epsilon, K);
   }
   float epsilon_;
   int   K_;
@@ -119,8 +129,8 @@ class L2NormalizeCKTRSOp : public L2NormalizeKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("magic_TRS", &magic_TRS_ ));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shift_TRS", &shift_TRS_ ));
   }
-  virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const int* lut, float epsilon, int K) {
-    return L2NormalizeCKTRS<VY,VX>(y, sum_sqr_x, x, 0, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
+  virtual bool L2Normalize(CUstream stream, VY* y, float* sum_sqr_x, const VX* x, const int* lut, float epsilon, int K) {
+    return L2NormalizeCKTRS<VY,VX>(stream, y, sum_sqr_x, x, 0, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
   }
   int TRS_, magic_TRS_, shift_TRS_;
 };
@@ -131,8 +141,8 @@ class L2NormalizeCKOp : public L2NormalizeKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shared", &shared_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("bsize",  &bsize_ ));
   }
-  virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const int* lut, float epsilon, int K) {
-    return L2NormalizeCK<VY,VX>(y, sum_sqr_x, x, 0, lut, epsilon, K, shared_, bsize_);
+  virtual bool L2Normalize(CUstream stream, VY* y, float* sum_sqr_x, const VX* x, const int* lut, float epsilon, int K) {
+    return L2NormalizeCK<VY,VX>(stream, y, sum_sqr_x, x, 0, lut, epsilon, K, shared_, bsize_);
   }
   int shared_, bsize_;
 };
@@ -236,11 +246,13 @@ class L2NormalizeGainKCTRSOp : public OpKernel {
     const float*     g_ptr = g.flat<float>().data();
     const   int*   lut_ptr = (const int*)lut.flat<int64>().data();
 
-    this->L2Normalize(y_ptr, sum_x_ptr, x_ptr, g_ptr, lut_ptr, epsilon_, K_);
-  }
-  virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
 
-    return L2NormalizeKCTRS<VY,VX>(y, sum_sqr_x, x, g, lut, epsilon, K);
+    this->L2Normalize(stream, y_ptr, sum_x_ptr, x_ptr, g_ptr, lut_ptr, epsilon_, K_);
+  }
+  virtual bool L2Normalize(CUstream stream, VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
+
+    return L2NormalizeKCTRS<VY,VX>(stream, y, sum_sqr_x, x, g, lut, epsilon, K);
   }
   float epsilon_;
   int   K_;
@@ -253,8 +265,8 @@ class L2NormalizeGainCKTRSOp : public L2NormalizeGainKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("magic_TRS", &magic_TRS_ ));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shift_TRS", &shift_TRS_ ));
   }
-  virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
-    return L2NormalizeCKTRS<VY,VX>(y, sum_sqr_x, x, g, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
+  virtual bool L2Normalize(CUstream stream, VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
+    return L2NormalizeCKTRS<VY,VX>(stream, y, sum_sqr_x, x, g, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
   }
   int TRS_, magic_TRS_, shift_TRS_;
 };
@@ -265,8 +277,8 @@ class L2NormalizeGainCKOp : public L2NormalizeGainKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shared", &shared_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("bsize",  &bsize_ ));
   }
-  virtual bool L2Normalize(VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
-    return L2NormalizeCK<VY,VX>(y, sum_sqr_x, x, g, lut, epsilon, K, shared_, bsize_);
+  virtual bool L2Normalize(CUstream stream, VY* y, float* sum_sqr_x, const VX* x, const float* g, const int* lut, float epsilon, int K) {
+    return L2NormalizeCK<VY,VX>(stream, y, sum_sqr_x, x, g, lut, epsilon, K, shared_, bsize_);
   }
   int shared_, bsize_;
 };
@@ -294,9 +306,9 @@ REGISTER_KERNEL_BUILDER(Name("L2NormalizeGainCK").Device(DEVICE_GPU).TypeConstra
 /////////////////////////////////////// Gradients ///////////////////////////////////////////
 
 
-template <typename TY, typename TX> bool L2NormalizeGradKCTRS(TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
-template <typename TY, typename TX> bool L2NormalizeGradCKTRS(TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template <typename TY, typename TX> bool L2NormalizeGradCK   (TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
+template <typename TY, typename TX> bool L2NormalizeGradKCTRS(CUstream stream, TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
+template <typename TY, typename TX> bool L2NormalizeGradCKTRS(CUstream stream, TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template <typename TY, typename TX> bool L2NormalizeGradCK   (CUstream stream, TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
 
 
 Status L2NormalizeGradShape(InferenceContext* ctx)
@@ -379,11 +391,13 @@ class L2NormalizeGradKCTRSOp : public OpKernel {
     const   int*    lut_ptr = (const int*)lut.flat<int64>().data();
              VX* grad_x_ptr = (VX*)grad_x->flat<TX>().data();
 
-    this->L2NormalizeGrad(grad_x_ptr, grad_y_ptr, x_ptr, sum_x_ptr, lut_ptr, epsilon_, K_);
-  }
-  virtual bool L2NormalizeGrad(VX* grad_x, const VY* grad_y, const VX* x, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
 
-    return L2NormalizeGradKCTRS<VY,VX>(grad_x, 0, grad_y, x, 0, sum_sqr_x, lut, epsilon, K);
+    this->L2NormalizeGrad(stream, grad_x_ptr, grad_y_ptr, x_ptr, sum_x_ptr, lut_ptr, epsilon_, K_);
+  }
+  virtual bool L2NormalizeGrad(CUstream stream, VX* grad_x, const VY* grad_y, const VX* x, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+
+    return L2NormalizeGradKCTRS<VY,VX>(stream, grad_x, 0, grad_y, x, 0, sum_sqr_x, lut, epsilon, K);
   }
   float epsilon_;
   int   K_;
@@ -396,8 +410,8 @@ class L2NormalizeGradCKTRSOp : public L2NormalizeGradKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("magic_TRS", &magic_TRS_ ));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shift_TRS", &shift_TRS_ ));
   }
-  virtual bool L2NormalizeGrad(VX* grad_x, const VY* grad_y, const VX* x, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
-    return L2NormalizeGradCKTRS<VY,VX>(grad_x, 0, grad_y, x, 0, sum_sqr_x, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
+  virtual bool L2NormalizeGrad(CUstream stream, VX* grad_x, const VY* grad_y, const VX* x, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+    return L2NormalizeGradCKTRS<VY,VX>(stream, grad_x, 0, grad_y, x, 0, sum_sqr_x, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
   }
   int TRS_, magic_TRS_, shift_TRS_;
 };
@@ -408,8 +422,8 @@ class L2NormalizeGradCKOp : public L2NormalizeGradKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shared", &shared_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("bsize",  &bsize_ ));
   }
-  virtual bool L2NormalizeGrad(VX* grad_x, const VY* grad_y, const VX* x, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
-    return L2NormalizeGradCK<VY,VX>(grad_x, 0, grad_y, x, 0, sum_sqr_x, lut, epsilon, K, shared_, bsize_);
+  virtual bool L2NormalizeGrad(CUstream stream, VX* grad_x, const VY* grad_y, const VX* x, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+    return L2NormalizeGradCK<VY,VX>(stream, grad_x, 0, grad_y, x, 0, sum_sqr_x, lut, epsilon, K, shared_, bsize_);
   }
   int shared_, bsize_;
 };
@@ -526,11 +540,13 @@ class L2NormalizeGainGradKCTRSOp : public OpKernel {
              VX* grad_x_ptr = (VX*)grad_x->flat<TX>().data();
           float* grad_g_ptr = grad_g->flat<float>().data();
 
-    this->L2NormalizeGrad(grad_x_ptr, grad_g_ptr, grad_y_ptr, x_ptr, g_ptr, sum_x_ptr, lut_ptr, epsilon_, K_);
-  }
-  virtual bool L2NormalizeGrad(VX* grad_x, float* grad_g, const VY* grad_y, const VX* x, const float* g, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
 
-    return L2NormalizeGradKCTRS<VY,VX>(grad_x, grad_g, grad_y, x, g, sum_sqr_x, lut, epsilon, K);
+    this->L2NormalizeGrad(stream, grad_x_ptr, grad_g_ptr, grad_y_ptr, x_ptr, g_ptr, sum_x_ptr, lut_ptr, epsilon_, K_);
+  }
+  virtual bool L2NormalizeGrad(CUstream stream, VX* grad_x, float* grad_g, const VY* grad_y, const VX* x, const float* g, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+
+    return L2NormalizeGradKCTRS<VY,VX>(stream, grad_x, grad_g, grad_y, x, g, sum_sqr_x, lut, epsilon, K);
   }
   float epsilon_;
   int   K_;
@@ -543,8 +559,8 @@ class L2NormalizeGainGradCKTRSOp : public L2NormalizeGainGradKCTRSOp<TY,TX,VY,VX
     OP_REQUIRES_OK(ctx, ctx->GetAttr("magic_TRS", &magic_TRS_ ));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shift_TRS", &shift_TRS_ ));
   }
-  virtual bool L2NormalizeGrad(VX* grad_x, float* grad_g, const VY* grad_y, const VX* x, const float* g, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
-    return L2NormalizeGradCKTRS<VY,VX>(grad_x, grad_g, grad_y, x, g, sum_sqr_x, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
+  virtual bool L2NormalizeGrad(CUstream stream, VX* grad_x, float* grad_g, const VY* grad_y, const VX* x, const float* g, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+    return L2NormalizeGradCKTRS<VY,VX>(stream, grad_x, grad_g, grad_y, x, g, sum_sqr_x, lut, epsilon, K, TRS_, magic_TRS_, shift_TRS_);
   }
   int TRS_, magic_TRS_, shift_TRS_;
 };
@@ -555,8 +571,8 @@ class L2NormalizeGainGradCKOp : public L2NormalizeGainGradKCTRSOp<TY,TX,VY,VX> {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("shared", &shared_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("bsize",  &bsize_ ));
   }
-  virtual bool L2NormalizeGrad(VX* grad_x, float* grad_g, const VY* grad_y, const VX* x, const float* g, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
-    return L2NormalizeGradCK<VY,VX>(grad_x, grad_g, grad_y, x, g, sum_sqr_x, lut, epsilon, K, shared_, bsize_);
+  virtual bool L2NormalizeGrad(CUstream stream, VX* grad_x, float* grad_g, const VY* grad_y, const VX* x, const float* g, const float* sum_sqr_x, const int* lut, float epsilon, int K) {
+    return L2NormalizeGradCK<VY,VX>(stream, grad_x, grad_g, grad_y, x, g, sum_sqr_x, lut, epsilon, K, shared_, bsize_);
   }
   int shared_, bsize_;
 };
