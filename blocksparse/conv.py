@@ -513,11 +513,15 @@ class BlocksparseConv(object):
         return output
 
     def l2_normalize(self, F, gain=None, epsilon=1e-12, dtype=np.float32):
+        # TODO (juan): hack to get around type incompatibility issues
+        norm_lut = self.norm_lut
+        if norm_lut.dtype == tf.int32:
+            norm_lut = tf.cast(norm_lut, dtype=tf.int64)
         if gain is None:
-            F, _ = l2_normalize_kctrs(F, self.norm_lut, TY=dtype, epsilon=epsilon, K=self.normSize )
+            F, _ = l2_normalize_kctrs(F, norm_lut, TY=dtype, epsilon=epsilon, K=self.normSize )
         else:
             assert self.overlapK is False, "no gain support for overlapping output blocks"
-            F, _ = l2_normalize_gain_kctrs(F, gain, self.norm_lut, TY=dtype, epsilon=epsilon, K=self.normSize )
+            F, _ = l2_normalize_gain_kctrs(F, gain, norm_lut, TY=dtype, epsilon=epsilon, K=self.normSize )
         return F
 
     def collapse_filter(self, F, dtype=None):
