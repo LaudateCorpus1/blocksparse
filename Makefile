@@ -78,6 +78,7 @@ LDFLAGS = -shared ${TF_LFLAGS}
 
 OBJS=\
 	$(TARGET)/batch_norm_op.o \
+	$(TARGET)/blocksparse_conv_op.o \
 	$(TARGET)/blocksparse_kernels.o \
 	$(TARGET)/blocksparse_l2_norm_op.o
 

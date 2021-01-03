@@ -7,7 +7,6 @@
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
 // #include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#include "tensorflow/core/util/gpu_kernel_helper.h"
 
 #include <stdio.h>
 #include <stdlib.h>
