@@ -515,7 +515,9 @@ class BlocksparseConv(object):
     def l2_normalize(self, F, gain=None, epsilon=1e-12, dtype=np.float32):
         # TODO (juan): hack to get around type incompatibility issues
         norm_lut = self.norm_lut
+        print(f'DTYPE!! {norm_lut.dtype}')
         if norm_lut.dtype == tf.int32:
+            print("casting!!")
             norm_lut = tf.cast(norm_lut, dtype=tf.int64)
         if gain is None:
             F, _ = l2_normalize_kctrs(F, norm_lut, TY=dtype, epsilon=epsilon, K=self.normSize )
