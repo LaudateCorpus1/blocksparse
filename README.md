@@ -32,19 +32,21 @@ $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working
 # make compile
 ```
 
-4) Install compiled version (inside the docker container)
+4) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
+we can do a pip install.
 ```
+# exit
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
 # pip3 install dist/*.whl
 ```
 
 5) Test compiled version (inside the docker container)
 ```
 # test/blocksparse_matmul_test.py
-# test/blocksparse_conv_test.py
 ```
 
-### Known test failures
-No new tests fail, the tests noted below still fail.
+### Tests
+- No new tests fail, the tests noted below still fail, except for the `test/nccl_test.py` test which now passes.
 
 
 ## Known test failures
@@ -57,7 +59,8 @@ TF 1.13.1 above.
 - `test/blocksparse_reduced_dw_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
 - `test/blocksparse_transformer_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
 - `test/edge_bias.py` -- hangs and nothing ever happens.
-- `test/nccl_test.py` -- fails with "AttributeError: module 'a9a37b9e0fcca4488628a1751af42d7d' has no attribute 'allreduce_nccl'".
+- `test/nccl_test.py` -- fails with "AttributeError: module 'a9a37b9e0fcca4488628a1751af42d7d' has no attribute 'allreduce_nccl'". This actually makes sense since in this
+  commit the compile step has all of the nccl stuff commented out.
 - `test/quantize_test.py` -- fails with "FileNotFoundError: [Errno 2] No such file or directory: '/home/scott/quant_log.txt'", changed the logfile to `./quant_log.txt` then it works.
 
 
