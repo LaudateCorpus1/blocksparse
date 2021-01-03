@@ -127,7 +127,7 @@ _params = {
 
 def _get_cache_dir(subdir=None):
 
-    cache_dir = os.path.expanduser("~/.cache/blocksparse")
+    cache_dir = os.path.expanduser("./cache/blocksparse")
 
     if subdir:
         subdir = subdir if isinstance(subdir, list) else [subdir]
