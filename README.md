@@ -1,5 +1,38 @@
 # Kite usage, read first
 
+## Manual build for tf 1.15.2
+NOTE:
+- commands prefixed by `$` should be run in a shell on the host machine
+- commands prefixed by `#` should be run in an interactive shell in the docker container
+
+1) Build image
+```
+$ sudo docker image build -f Dockerfile --rm -t blocksparse:local .
+```
+
+2) Start docker container with an interactive shell and gpu access (we use the -u flag to ensure that the build artifacts have the correct host user information/permissions)
+```
+$ docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local
+```
+
+3) Compile (inside the docker container)
+```
+# make compile
+```
+
+4) Install compiled version (inside the docker container)
+```
+# pip3 install dist/*.whl
+```
+
+5) Test compiled version (inside the docker container)
+```
+# test/blocksparse_matmul_test.py
+# test/blocksparse_conv_test.py
+```
+
+
+
 ## Manual build for tf 1.13.1
 NOTE:
 - commands prefixed by `$` should be run in a shell on the host machine
