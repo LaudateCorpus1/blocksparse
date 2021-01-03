@@ -10,19 +10,20 @@ NOTE:
 $ sudo docker image build -f Dockerfile-tf-1.13.1 --rm -t blocksparse:local-tf.1.13.1 .
 ```
 
-2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*
+2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*. 
+We use the -u flag to ensure that the build artifacts have the correct host user information/permissions.
 
 CPU
 - the tests below will fail if you try to run them without GPU support
 - the `ln` command should be run inside the docker container
 ```
-$ docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
+$ sudo docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local-tf.1.13.1
 # ln -s /usr/local/cuda/compat/libcuda.so /usr/lib/libcuda.so
 ```
 
 GPU
 ```
-$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local-tf.1.13.1
 ```
 
 3) Compile (inside the docker container)
