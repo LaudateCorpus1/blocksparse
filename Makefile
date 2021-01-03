@@ -37,11 +37,14 @@ TF_LIB=$(shell python -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())
 TF_ABI=$(shell python -c 'import tensorflow as tf; print(tf.__cxx11_abi_flag__ if "__cxx11_abi_flag__" in tf.__dict__ else 0)')
 
 TF_VERSION=$(shell python -c 'import tensorflow as tf; print(tf.__version__)')
+TF_NEW=0
 ifeq ($(TF_VERSION),1.15.2)
 	TF_LIB=$(shell python -c 'import tensorflow_core as tf; print(tf.sysconfig.get_lib())')
+	TF_NEW=1
 endif
 
-CCFLAGS=-std=c++11 -O3 -fPIC -DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) \
+CCFLAGS=-std=c++11 -O3 -fPIC -D GOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) \
+	TF_NEW=$(TF_NEW) \
 	-I$(TARGET) \
 	-I$(NV_INC) \
 	-I$(TF_INC)/tensorflow/include \

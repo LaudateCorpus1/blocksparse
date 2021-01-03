@@ -1,3 +1,7 @@
+// SUPER HACKY, replicate https://github.com/petewarden/tensorflow_makefile/blob/master/tensorflow/stream_executor/cuda/cuda_stream.h
+// since it was removed after 1f 1.13.x
+#if TF_NEW
+
 /* Copyright 2015 Google Inc. All Rights Reserved.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -90,3 +94,4 @@ CUstream AsCUDAStreamValue(Stream *stream);
 }  // namespace perftools
 
 #endif  // TENSORFLOW_STREAM_EXECUTOR_CUDA_CUDA_STREAM_H_
+#endif // TF_NEW
