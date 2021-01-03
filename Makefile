@@ -77,7 +77,9 @@ TF_LFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".j
 LDFLAGS = -shared ${TF_LFLAGS}
 
 OBJS=\
-	$(TARGET)/batch_norm_op.o
+	$(TARGET)/batch_norm_op.o \
+	$(TARGET)/blocksparse_kernels.o \
+	$(TARGET)/blocksparse_l2_norm_op.o
 
 # OBJS=\
 # 	$(TARGET)/batch_norm_op.o \
@@ -122,7 +124,8 @@ OBJS=\
 # 	$(TARGET)/matmul_op_gpu.cu.o
 
 CU_OBJS=\
-	$(TARGET)/batch_norm_op_gpu.cu.o
+	$(TARGET)/batch_norm_op_gpu.cu.o \
+	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o
 
 $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	mkdir -p $(shell dirname $@)

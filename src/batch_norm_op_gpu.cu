@@ -1,9 +1,7 @@
 
 #if GOOGLE_CUDA
-#define EIGEN_USE_GPU
 
 #include "ew_op_gpu.h"
-#include "tensorflow/core/util/gpu_kernel_helper.h"
 
 __device__ __forceinline__ int div64(int value, int magic, int shift)
 {

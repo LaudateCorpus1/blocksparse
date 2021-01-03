@@ -376,43 +376,43 @@ __global__ void __launch_bounds__(32) l2_normalize_CK_8(
 
 
 template <typename TY, typename TX>
-bool L2NormalizeKCTRS(CUstream stream, TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K)
+bool L2NormalizeKCTRS(TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K)
 {
     dim3 grid(K, 1, 1);
     dim3 block(32, 1, 1);
-    l2_normalize_KCTRS<TY,TX><<<grid, block, 0, stream>>>(y, sum_sqr_x, x, g, (const int2*)lut, epsilon, g != 0);
+    l2_normalize_KCTRS<TY,TX><<<grid, block, 0>>>(y, sum_sqr_x, x, g, (const int2*)lut, epsilon, g != 0);
     return true; // TODO
 }
 
 template <typename TY, typename TX>
-bool L2NormalizeCKTRS(CUstream stream, TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS)
+bool L2NormalizeCKTRS(TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS)
 {
     dim3 grid(K, 1, 1);
     dim3 block(32, 1, 1);
-    l2_normalize_CKTRS<TY,TX><<<grid, block, 0, stream>>>(y, sum_sqr_x, x, g, (const int4*)lut, epsilon, g != 0, TRS, magic_TRS, shift_TRS);
+    l2_normalize_CKTRS<TY,TX><<<grid, block, 0>>>(y, sum_sqr_x, x, g, (const int4*)lut, epsilon, g != 0, TRS, magic_TRS, shift_TRS);
     return true; // TODO
 }
 
 template <typename TY, typename TX>
-bool L2NormalizeCK(CUstream stream, TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize)
+bool L2NormalizeCK(TY* y, float* sum_sqr_x, const TX* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize)
 {
     if (bsize == 32)
     {
         dim3 grid(K>>5, 1, 1);
         dim3 block(128, 1, 1);
-        l2_normalize_CK_32<TY,TX><<<grid, block, shared+96*4, stream>>>(y, sum_sqr_x, x, g, lut, epsilon, g != 0);
+        l2_normalize_CK_32<TY,TX><<<grid, block, shared+96*4>>>(y, sum_sqr_x, x, g, lut, epsilon, g != 0);
     }
     else if (bsize == 16)
     {
         dim3 grid(K>>4, 1, 1);
         dim3 block(32, 1, 1);
-        l2_normalize_CK_16<TY,TX><<<grid, block, shared, stream>>>(y, sum_sqr_x, x, g, lut, epsilon, g != 0);
+        l2_normalize_CK_16<TY,TX><<<grid, block, shared>>>(y, sum_sqr_x, x, g, lut, epsilon, g != 0);
     }
     else // if (bsize == 8)
     {
         dim3 grid(K>>3, 1, 1);
         dim3 block(32, 1, 1);
-        l2_normalize_CK_8<TY,TX><<<grid, block, shared, stream>>>(y, sum_sqr_x, x, g, lut, epsilon, g != 0);
+        l2_normalize_CK_8<TY,TX><<<grid, block, shared>>>(y, sum_sqr_x, x, g, lut, epsilon, g != 0);
     }
     return true; // TODO
 }
@@ -891,91 +891,91 @@ __global__ void __launch_bounds__(32) l2_normalize_grad_CK_8(
 }
 
 template <typename TY, typename TX>
-bool L2NormalizeGradKCTRS(CUstream stream, TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K)
+bool L2NormalizeGradKCTRS(TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K)
 {
     dim3 grid(K, 1, 1);
     dim3 block(32, 1, 1);
-    l2_normalize_grad_KCTRS<TY,TX><<<grid, block, 0, stream>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, (const int2*)lut, epsilon, g != 0);
+    l2_normalize_grad_KCTRS<TY,TX><<<grid, block, 0>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, (const int2*)lut, epsilon, g != 0);
     return true; // TODO
 }
 
 template <typename TY, typename TX>
-bool L2NormalizeGradCKTRS(CUstream stream, TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS)
+bool L2NormalizeGradCKTRS(TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS)
 {
     dim3 grid(K, 1, 1);
     dim3 block(32, 1, 1);
-    l2_normalize_grad_CKTRS<TY,TX><<<grid, block, 0, stream>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, (const int4*)lut, epsilon, g != 0, TRS, magic_TRS, shift_TRS);
+    l2_normalize_grad_CKTRS<TY,TX><<<grid, block, 0>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, (const int4*)lut, epsilon, g != 0, TRS, magic_TRS, shift_TRS);
     return true; // TODO
 }
 
 template <typename TY, typename TX>
-bool L2NormalizeGradCK   (CUstream stream, TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize)
+bool L2NormalizeGradCK   (TX* grad_x, float* grad_g, const TY* grad_y, const TX* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize)
 {
     if (bsize == 32)
     {
         dim3 grid(K>>5, 1, 1);
         dim3 block(128, 1, 1);
-        l2_normalize_grad_CK_32<TY,TX><<<grid, block, shared+96*2*4, stream>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, lut, epsilon, g != 0);
+        l2_normalize_grad_CK_32<TY,TX><<<grid, block, shared+96*2*4>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, lut, epsilon, g != 0);
     }
     else if (bsize == 16)
     {
         dim3 grid(K>>4, 1, 1);
         dim3 block(32, 1, 1);
-        l2_normalize_grad_CK_16<TY,TX><<<grid, block, shared, stream>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, lut, epsilon, g != 0);
+        l2_normalize_grad_CK_16<TY,TX><<<grid, block, shared>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, lut, epsilon, g != 0);
     }
     else // if (bsize == 8)
     {
         dim3 grid(K>>3, 1, 1);
         dim3 block(32, 1, 1);
-        l2_normalize_grad_CK_8<TY,TX><<<grid, block, shared, stream>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, lut, epsilon, g != 0);
+        l2_normalize_grad_CK_8<TY,TX><<<grid, block, shared>>>(grad_x, grad_g, grad_y, x, g, sum_sqr_x_p, lut, epsilon, g != 0);
     }
     return true; // TODO
 }
 
 
-template bool L2NormalizeKCTRS<float, float>(CUstream stream, float* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K);
-template bool L2NormalizeCKTRS<float, float>(CUstream stream, float* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeCK   <float, float>(CUstream stream, float* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
+template bool L2NormalizeKCTRS<float, float>(float* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K);
+template bool L2NormalizeCKTRS<float, float>(float* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeCK   <float, float>(float* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
 
-template bool L2NormalizeGradKCTRS<float, float>(CUstream stream, float* grad_x, float* grad_g, const float* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
-template bool L2NormalizeGradCKTRS<float, float>(CUstream stream, float* grad_x, float* grad_g, const float* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeGradCK   <float, float>(CUstream stream, float* grad_x, float* grad_g, const float* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
-
-
-template bool L2NormalizeKCTRS<ehalf, ehalf>(CUstream stream, ehalf* y, float* sum_sqr_x, const ehalf* x, const float* g, const int* lut, float epsilon, int K);
-template bool L2NormalizeCKTRS<ehalf, ehalf>(CUstream stream, ehalf* y, float* sum_sqr_x, const ehalf* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeCK   <ehalf, ehalf>(CUstream stream, ehalf* y, float* sum_sqr_x, const ehalf* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
-
-template bool L2NormalizeGradKCTRS<ehalf, ehalf>(CUstream stream, ehalf* grad_x, float* grad_g, const ehalf* grad_y, const ehalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
-template bool L2NormalizeGradCKTRS<ehalf, ehalf>(CUstream stream, ehalf* grad_x, float* grad_g, const ehalf* grad_y, const ehalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeGradCK   <ehalf, ehalf>(CUstream stream, ehalf* grad_x, float* grad_g, const ehalf* grad_y, const ehalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
+template bool L2NormalizeGradKCTRS<float, float>(float* grad_x, float* grad_g, const float* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
+template bool L2NormalizeGradCKTRS<float, float>(float* grad_x, float* grad_g, const float* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeGradCK   <float, float>(float* grad_x, float* grad_g, const float* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
 
 
-template bool L2NormalizeKCTRS<ehalf, float>(CUstream stream, ehalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K);
-template bool L2NormalizeCKTRS<ehalf, float>(CUstream stream, ehalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeCK   <ehalf, float>(CUstream stream, ehalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
+template bool L2NormalizeKCTRS<ehalf, ehalf>(ehalf* y, float* sum_sqr_x, const ehalf* x, const float* g, const int* lut, float epsilon, int K);
+template bool L2NormalizeCKTRS<ehalf, ehalf>(ehalf* y, float* sum_sqr_x, const ehalf* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeCK   <ehalf, ehalf>(ehalf* y, float* sum_sqr_x, const ehalf* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
 
-template bool L2NormalizeGradKCTRS<ehalf, float>(CUstream stream, float* grad_x, float* grad_g, const ehalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
-template bool L2NormalizeGradCKTRS<ehalf, float>(CUstream stream, float* grad_x, float* grad_g, const ehalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeGradCK   <ehalf, float>(CUstream stream, float* grad_x, float* grad_g, const ehalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
-
-
-template bool L2NormalizeKCTRS<bhalf, bhalf>(CUstream stream, bhalf* y, float* sum_sqr_x, const bhalf* x, const float* g, const int* lut, float epsilon, int K);
-template bool L2NormalizeCKTRS<bhalf, bhalf>(CUstream stream, bhalf* y, float* sum_sqr_x, const bhalf* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeCK   <bhalf, bhalf>(CUstream stream, bhalf* y, float* sum_sqr_x, const bhalf* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
-
-template bool L2NormalizeGradKCTRS<bhalf, bhalf>(CUstream stream, bhalf* grad_x, float* grad_g, const bhalf* grad_y, const bhalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
-template bool L2NormalizeGradCKTRS<bhalf, bhalf>(CUstream stream, bhalf* grad_x, float* grad_g, const bhalf* grad_y, const bhalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeGradCK   <bhalf, bhalf>(CUstream stream, bhalf* grad_x, float* grad_g, const bhalf* grad_y, const bhalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
+template bool L2NormalizeGradKCTRS<ehalf, ehalf>(ehalf* grad_x, float* grad_g, const ehalf* grad_y, const ehalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
+template bool L2NormalizeGradCKTRS<ehalf, ehalf>(ehalf* grad_x, float* grad_g, const ehalf* grad_y, const ehalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeGradCK   <ehalf, ehalf>(ehalf* grad_x, float* grad_g, const ehalf* grad_y, const ehalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
 
 
-template bool L2NormalizeKCTRS<bhalf, float>(CUstream stream, bhalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K);
-template bool L2NormalizeCKTRS<bhalf, float>(CUstream stream, bhalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeCK   <bhalf, float>(CUstream stream, bhalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
+template bool L2NormalizeKCTRS<ehalf, float>(ehalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K);
+template bool L2NormalizeCKTRS<ehalf, float>(ehalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeCK   <ehalf, float>(ehalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
 
-template bool L2NormalizeGradKCTRS<bhalf, float>(CUstream stream, float* grad_x, float* grad_g, const bhalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
-template bool L2NormalizeGradCKTRS<bhalf, float>(CUstream stream, float* grad_x, float* grad_g, const bhalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
-template bool L2NormalizeGradCK   <bhalf, float>(CUstream stream, float* grad_x, float* grad_g, const bhalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
+template bool L2NormalizeGradKCTRS<ehalf, float>(float* grad_x, float* grad_g, const ehalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
+template bool L2NormalizeGradCKTRS<ehalf, float>(float* grad_x, float* grad_g, const ehalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeGradCK   <ehalf, float>(float* grad_x, float* grad_g, const ehalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
+
+
+template bool L2NormalizeKCTRS<bhalf, bhalf>(bhalf* y, float* sum_sqr_x, const bhalf* x, const float* g, const int* lut, float epsilon, int K);
+template bool L2NormalizeCKTRS<bhalf, bhalf>(bhalf* y, float* sum_sqr_x, const bhalf* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeCK   <bhalf, bhalf>(bhalf* y, float* sum_sqr_x, const bhalf* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
+
+template bool L2NormalizeGradKCTRS<bhalf, bhalf>(bhalf* grad_x, float* grad_g, const bhalf* grad_y, const bhalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
+template bool L2NormalizeGradCKTRS<bhalf, bhalf>(bhalf* grad_x, float* grad_g, const bhalf* grad_y, const bhalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeGradCK   <bhalf, bhalf>(bhalf* grad_x, float* grad_g, const bhalf* grad_y, const bhalf* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
+
+
+template bool L2NormalizeKCTRS<bhalf, float>(bhalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K);
+template bool L2NormalizeCKTRS<bhalf, float>(bhalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeCK   <bhalf, float>(bhalf* y, float* sum_sqr_x, const float* x, const float* g, const int* lut, float epsilon, int K, int shared, int bsize);
+
+template bool L2NormalizeGradKCTRS<bhalf, float>(float* grad_x, float* grad_g, const bhalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K);
+template bool L2NormalizeGradCKTRS<bhalf, float>(float* grad_x, float* grad_g, const bhalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int TRS, int magic_TRS, int shift_TRS);
+template bool L2NormalizeGradCK   <bhalf, float>(float* grad_x, float* grad_g, const bhalf* grad_y, const float* x, const float* g, const float* sum_sqr_x_p, const int* lut, float epsilon, int K, int shared, int bsize);
 
 
 #endif // GOOGLE_CUDA
