@@ -8,6 +8,8 @@
 #include "tensorflow/core/platform/stream_executor.h"
 // #include "tensorflow/stream_executor/cuda/cuda_stream.h"
 
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
