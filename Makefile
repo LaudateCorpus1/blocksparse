@@ -83,53 +83,44 @@ OBJS=\
 	$(TARGET)/batch_norm_op.o \
 	$(TARGET)/blocksparse_conv_op.o \
 	$(TARGET)/blocksparse_kernels.o \
-	$(TARGET)/blocksparse_l2_norm_op.o
-
-# OBJS=\
-# 	$(TARGET)/batch_norm_op.o \
-# 	$(TARGET)/blocksparse_conv_op.o \
-# 	$(TARGET)/blocksparse_kernels.o \
-# 	$(TARGET)/blocksparse_l2_norm_op.o \
-# 	$(TARGET)/blocksparse_matmul_op.o \
-# 	$(TARGET)/bst_op.o \
-# 	$(TARGET)/cwise_linear_op.o \
-# 	$(TARGET)/edge_bias_op.o \
-# 	$(TARGET)/ew_op.o \
-# 	$(TARGET)/gpu_types.o \
-# 	$(TARGET)/layer_norm_op.o \
-# 	$(TARGET)/lstm_op.o \
-# 	$(TARGET)/optimize_op.o \
-# 	$(TARGET)/quantize_op.o \
-# 	$(TARGET)/transformer_op.o \
-# 	$(TARGET)/embedding_op.o \
-# 	$(TARGET)/matmul_op.o \
-# 	$(TARGET)/nccl_op.o
-
-# CU_OBJS=\
-# 	$(TARGET)/batch_norm_op_gpu.cu.o \
-# 	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o \
-# 	$(TARGET)/blocksparse_matmul_op_gpu.cu.o \
-# 	$(TARGET)/blocksparse_hgemm_cn_64_op_gpu.cu.o \
-# 	$(TARGET)/blocksparse_hgemm_cn_128_op_gpu.cu.o \
-# 	$(TARGET)/blocksparse_hgemm_nc_op_gpu.cu.o \
-# 	$(TARGET)/bst_hgemm_op_gpu.cu.o \
-# 	$(TARGET)/bst_sgemm_op_gpu.cu.o \
-# 	$(TARGET)/bst_softmax_op_gpu.cu.o \
-# 	$(TARGET)/cwise_linear_op_gpu.cu.o \
-# 	$(TARGET)/edge_bias_op_gpu.cu.o \
-# 	$(TARGET)/ew_op_gpu.cu.o \
-# 	$(TARGET)/layer_norm_cn_op_gpu.cu.o \
-# 	$(TARGET)/layer_norm_nc_op_gpu.cu.o \
-# 	$(TARGET)/lstm_op_gpu.cu.o \
-# 	$(TARGET)/optimize_op_gpu.cu.o \
-# 	$(TARGET)/quantize_op_gpu.cu.o \
-# 	$(TARGET)/transformer_op_gpu.cu.o \
-# 	$(TARGET)/embedding_op_gpu.cu.o \
-# 	$(TARGET)/matmul_op_gpu.cu.o
+	$(TARGET)/blocksparse_l2_norm_op.o \
+	$(TARGET)/blocksparse_matmul_op.o \
+	$(TARGET)/bst_op.o \
+	$(TARGET)/cwise_linear_op.o \
+	$(TARGET)/edge_bias_op.o \
+	$(TARGET)/ew_op.o \
+	$(TARGET)/gpu_types.o \
+	$(TARGET)/layer_norm_op.o \
+	$(TARGET)/lstm_op.o \
+	$(TARGET)/optimize_op.o \
+	$(TARGET)/quantize_op.o \
+	$(TARGET)/transformer_op.o \
+	$(TARGET)/embedding_op.o \
+	$(TARGET)/matmul_op.o \
+	$(TARGET)/nccl_op.o
 
 CU_OBJS=\
 	$(TARGET)/batch_norm_op_gpu.cu.o \
-	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o
+	$(TARGET)/blocksparse_l2_norm_op_gpu.cu.o \
+	$(TARGET)/blocksparse_matmul_op_gpu.cu.o \
+	$(TARGET)/blocksparse_hgemm_cn_64_op_gpu.cu.o \
+	$(TARGET)/blocksparse_hgemm_cn_128_op_gpu.cu.o \
+	$(TARGET)/blocksparse_hgemm_nc_op_gpu.cu.o \
+	$(TARGET)/bst_hgemm_op_gpu.cu.o \
+	$(TARGET)/bst_sgemm_op_gpu.cu.o \
+	$(TARGET)/bst_softmax_op_gpu.cu.o \
+	$(TARGET)/cwise_linear_op_gpu.cu.o \
+	$(TARGET)/edge_bias_op_gpu.cu.o \
+	$(TARGET)/ew_op_gpu.cu.o \
+	$(TARGET)/layer_norm_cn_op_gpu.cu.o \
+	$(TARGET)/layer_norm_nc_op_gpu.cu.o \
+	$(TARGET)/lstm_op_gpu.cu.o \
+	$(TARGET)/optimize_op_gpu.cu.o \
+	$(TARGET)/quantize_op_gpu.cu.o \
+	$(TARGET)/transformer_op_gpu.cu.o \
+	$(TARGET)/embedding_op_gpu.cu.o \
+	$(TARGET)/matmul_op_gpu.cu.o
+
 
 $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	mkdir -p $(shell dirname $@)

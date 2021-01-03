@@ -5,7 +5,12 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
+
+#if TF_NEW
+#include "cuda_stream.h"
+#else
 #include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#endif
 
 using namespace tensorflow;
 
