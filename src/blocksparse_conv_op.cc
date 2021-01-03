@@ -23,7 +23,7 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-// using perftools::gputools::cuda::CUDAStream;
+using perftools::gputools::cuda::CUDAStream;
 
 Status GetKernel(std::string& kernel_name, CUfunction* kernel);
 
