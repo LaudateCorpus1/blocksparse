@@ -80,13 +80,13 @@ TF_LFLAGS := $(shell python -c 'import tensorflow as tf; print(" ".join(tf.sysco
 LDFLAGS = -shared ${TF_LFLAGS}
 
 OBJS=\
+	$(TARGET)/cuda_stream.o \
 	$(TARGET)/batch_norm_op.o \
 	$(TARGET)/blocksparse_conv_op.o \
 	$(TARGET)/blocksparse_kernels.o \
 	$(TARGET)/blocksparse_l2_norm_op.o \
 	$(TARGET)/blocksparse_matmul_op.o \
 	$(TARGET)/bst_op.o \
-	$(TARGET)/cuda_stream.o \
 	$(TARGET)/cwise_linear_op.o \
 	$(TARGET)/edge_bias_op.o \
 	$(TARGET)/ew_op.o \
