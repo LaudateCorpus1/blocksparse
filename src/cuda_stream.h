@@ -2,6 +2,7 @@
 // since it was removed after 1f 1.13.x
 #if TF_NEW
 
+#include "tensorflow/core/framework/op_kernel.h"
 #include <cuda.h>
 
 // TODO: super hacky,
@@ -16,6 +17,7 @@ CUstream* get_custream(OpKernelContext* ctx) {
 }
 
 #else
+#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/stream_executor/cuda/cuda_stream.h"
 
 using perftools::gputools::cuda::CUDAStream;
