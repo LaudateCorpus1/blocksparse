@@ -68,9 +68,18 @@ $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working
 
 1) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
 we can do a pip install.
+
+### TF 1.15.2
 ```
 # exit
 $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local
+# pip3 install dist/*.whl
+```
+
+### TF 1.13.1
+```
+# exit
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
 # pip3 install dist/*.whl
 ```
 
