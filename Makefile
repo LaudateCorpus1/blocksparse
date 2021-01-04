@@ -86,6 +86,7 @@ OBJS=\
 	$(TARGET)/blocksparse_l2_norm_op.o \
 	$(TARGET)/blocksparse_matmul_op.o \
 	$(TARGET)/bst_op.o \
+	$(TARGET)/cuda_stream.o \
 	$(TARGET)/cwise_linear_op.o \
 	$(TARGET)/edge_bias_op.o \
 	$(TARGET)/ew_op.o \
