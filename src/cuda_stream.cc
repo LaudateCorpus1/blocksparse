@@ -4,13 +4,11 @@
 
 #if TF_NEW
 
+#include "tensorflow/stream_executor/stream.h"
+#include "tensorflow/stream_executor/stream_executor_internal.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include <cuda.h>
-#include "tensorflow/stream_executor/cuda/cuda_driver.h"
-#include "tensorflow/stream_executor/platform/thread_annotations.h"
-#include "tensorflow/stream_executor/stream_executor_internal.h"
-#include "tensorflow/stream_executor/cuda/cuda_gpu_executor.h"
-#include "tensorflow/stream_executor/stream.h"
+
 
 using namespace tensorflow;
 
