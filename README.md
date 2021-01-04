@@ -32,22 +32,6 @@ $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working
 # make compile
 ```
 
-4) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
-we can do a pip install.
-```
-# exit
-$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local
-# pip3 install dist/*.whl
-```
-
-5) Test compiled version (inside the docker container)
-```
-# test/blocksparse_matmul_test.py
-```
-
-### Tests
-- No new tests fail, the tests noted below still fail, except for the `test/nccl_test.py` test which now passes.
-
 ## TF 1.13.1
 ###  Manual build
 NOTE:
@@ -80,24 +64,26 @@ $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working
 # make compile
 ```
 
-4) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
+## Testing
+
+1) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
 we can do a pip install.
 ```
 # exit
-$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local
 # pip3 install dist/*.whl
 ```
 
-5) Test compiled version (inside the docker container)
+2) Test compiled version (inside the docker container)
 ```
 # test/blocksparse_matmul_test.py
 ```
 
-### Tests
-- No new tests fail, the tests noted below still fail, except for the `test/nccl_test.py` test which now passes.
+### Current known test failures
+- All of the tests noted below still fail on tf.1.13.1 and tf.1.15.2 builds. The exceptions are `test/nccl_test.py` and `test/quantize_test.py` which
+  now pass.
 
-
-## Known test failures
+## Original known test failures
 As far as I can tell, the following tests have always failed on our builds. I determined this by
 checking out commit `3ead98d761cd15095fe8198881490d2acbbd0706` and then building using the instructions for
 TF 1.13.1 above.
