@@ -4,7 +4,7 @@ RUN pip install --upgrade pip
 # Need this to run the tests
 RUN pip3 install networkx==2.5
 
-# Hacks link CUDA libraries correctly
+# Hack to link CUDA libraries correctly
 # SEE: https://github.com/tensorflow/tensorflow/issues/34428
 RUN mkdir -p /usr/local/lib/python3.6/dist-packages/tensorflow_core/include/third_party/gpus/cuda/
 RUN ln -s /usr/local/cuda/include /usr/local/lib/python3.6/dist-packages/tensorflow_core/include/third_party/gpus/cuda/
