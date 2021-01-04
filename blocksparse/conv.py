@@ -424,6 +424,10 @@ class BlocksparseConv(object):
         self.bprop_grid = tf.constant(bpropGrid, name="bprop_grid")
         self.updat_grid = tf.constant(updatGrid, name="updat_grid")
         self.norm_lut   = tf.constant(normLut,   name="norm_lut")
+        
+        # TODO (juan): we should just update the kernel to fix this (see usage below)
+        if self.norm_lut.dtype == tf.int32:
+            self.norm_lut = tf.cast(self.norm_lut, tf.int64)
 
 
     def spatial_grid(self, DHW, MPQ, mpqLut, mpq, trs):
