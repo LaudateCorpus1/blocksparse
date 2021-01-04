@@ -10,7 +10,6 @@ RUN mkdir -p /usr/local/lib/python3.6/dist-packages/tensorflow_core/include/thir
 RUN ln -s /usr/local/cuda/include /usr/local/lib/python3.6/dist-packages/tensorflow_core/include/third_party/gpus/cuda/
 
 
-
 ENV NCCL_VERSION=2.4.8-1+cuda10.0
 RUN apt-get update && apt-get install -y --allow-downgrades --no-install-recommends \
   mpich \
@@ -20,7 +19,6 @@ RUN apt-get update && apt-get install -y --allow-downgrades --no-install-recomme
 
 # Need this to run tests, needs to come after we install the mpich and libmpich-dev stuff above
 RUN pip3 install mpi4py==3.0.3
-
 
 # Make sure the linker knows where to look for things
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
