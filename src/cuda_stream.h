@@ -1,8 +1,6 @@
 
 #ifndef GET_CUSTREAM
 #define GET_CUSTREAM
-// SUPER HACKY, replicate https://github.com/petewarden/tensorflow_makefile/blob/master/tensorflow/stream_executor/cuda/cuda_stream.h
-// since it was removed after 1f 1.13.x
 #if TF_NEW
 
 
@@ -11,7 +9,7 @@
 
 using namespace tensorflow;
 
-// TODO: super hacky,
+// TODO: super hacky, need this because the old way of getting the CUDAStream (see else block) was removed after tf 1.13.x
 // Works based on:
 //   - https://github.com/petewarden/tensorflow_makefile/blob/master/tensorflow/stream_executor/cuda/cuda_stream.h
 //   - https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/util/gpu_kernel_helper.h#L86
