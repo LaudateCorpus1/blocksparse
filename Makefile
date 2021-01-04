@@ -58,9 +58,6 @@ ifeq ($(TF_VERSION),1.15.2)
 	CCFLAGS +=-I$(TF_INC)/tensorflow_core/include
 endif
 
-test_env: 
-	@echo $(CCFLAGS)
-
 TF_CFLAGS := $(shell python -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 
 NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
@@ -126,7 +123,7 @@ $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	python generate_kernels.py
 
 blocksparse/blocksparse_ops.so: $(OBJS) $(CU_OBJS)
-	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) ${LDFLAGS} -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi 
+	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) ${LDFLAGS} -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi
 
 $(TARGET)/%.cu.o: src/%.cu $(TARGET)/blocksparse_kernels.h
 	mkdir -p $(shell dirname $@)
