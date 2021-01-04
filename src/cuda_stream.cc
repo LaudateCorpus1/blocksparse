@@ -15,7 +15,7 @@ using namespace tensorflow;
 //   - https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/util/gpu_kernel_helper.h#L86
 //   - and because cudaStream_t is interchangeable with CUstream (https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__DRIVER.html)
 CUstream get_custream(OpKernelContext* ctx) {
-  const CUstream* ptr = CHECK_NOTNULL(reinterpret_cast<const CUstream*>(ctx->op_device_context()->stream()->implementation()->GpuStreamMemberHack()));
+  const CUstream* ptr = reinterpret_cast<const CUstream*>(ctx->op_device_context()->stream()->implementation()->GpuStreamMemberHack());
   
   return *ptr;
 }
