@@ -24,6 +24,8 @@ CUstream get_custream(OpKernelContext* ctx) {
 }
 
 #else
+#include "tensorflow/stream_executor/stream.h"
+#include "tensorflow/stream_executor/stream_executor_internal.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/stream_executor/cuda/cuda_stream.h"
 
