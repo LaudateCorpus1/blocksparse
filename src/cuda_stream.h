@@ -1,3 +1,6 @@
+
+#ifndef GET_CUSTREAM
+#define GET_CUSTREAM
 // SUPER HACKY, replicate https://github.com/petewarden/tensorflow_makefile/blob/master/tensorflow/stream_executor/cuda/cuda_stream.h
 // since it was removed after 1f 1.13.x
 #if TF_NEW
@@ -31,3 +34,4 @@ CUstream get_custream(OpKernelContext* ctx) {
 }
 
 #endif // TF_NEW
+#endif // GET_CUSTREAM
