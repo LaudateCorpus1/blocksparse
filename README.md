@@ -1,5 +1,37 @@
 # Kite usage, read first
 
+## TF 1.15.2
+###  Manual build
+NOTE:
+- commands prefixed by `$` should be run in a shell on the host machine
+- commands prefixed by `#` should be run in an interactive shell in the docker container
+
+1) Build image
+```
+$ sudo docker image build -f Dockerfile --rm -t blocksparse:local .
+```
+
+2) Start docker container with an interactive terminal, *Choose the relevant CPU/GPU option below*. 
+We use the -u flag to ensure that the build artifacts have the correct host user information/permissions.
+
+CPU
+- the tests below will fail if you try to run them without GPU support
+- the `ln` command should be run inside the docker container
+```
+$ sudo docker run -it --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local
+# ln -s /usr/local/cuda/compat/libcuda.so /usr/lib/libcuda.so
+```
+
+GPU
+```
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir -u "$(id -u):$(id -g)" --rm blocksparse:local
+```
+
+3) Compile (inside the docker container)
+```
+# make compile
+```
+
 ## TF 1.13.1
 ###  Manual build
 NOTE:
@@ -32,24 +64,35 @@ $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working
 # make compile
 ```
 
-4) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
+## Testing
+
+1) Exit the docker container we used to build the package, then restart the docker container with root permissions so that
 we can do a pip install.
+
+### TF 1.15.2
+```
+# exit
+$ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local
+# pip3 install dist/*.whl
+```
+
+### TF 1.13.1
 ```
 # exit
 $ sudo docker run -it --gpus all --privileged -w /working_dir -v ${PWD}:/working_dir --rm blocksparse:local-tf.1.13.1
 # pip3 install dist/*.whl
 ```
 
-5) Test compiled version (inside the docker container)
+2) Test compiled version (inside the docker container)
 ```
 # test/blocksparse_matmul_test.py
 ```
 
-### Tests
-- No new tests fail, the tests noted below still fail, except for the `test/nccl_test.py` test which now passes.
+### Current known test failures
+- All of the tests noted below still fail on tf.1.13.1 and tf.1.15.2 builds. The exceptions are `test/nccl_test.py` and `test/quantize_test.py` which
+  now pass.
 
-
-## Known test failures
+## Original known test failures
 As far as I can tell, the following tests have always failed on our builds. I determined this by
 checking out commit `3ead98d761cd15095fe8198881490d2acbbd0706` and then building using the instructions for
 TF 1.13.1 above.
@@ -58,10 +101,14 @@ TF 1.13.1 above.
 - `test/blocksparse_matmul_bench.py` -- fails with "got an unexpected keyword argument 'dw_dtype'".
 - `test/blocksparse_reduced_dw_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
 - `test/blocksparse_transformer_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
-- `test/edge_bias.py` -- hangs and nothing ever happens.
+- `test/edge_bias_test.py` -- hangs and nothing ever happens.
 - `test/nccl_test.py` -- fails with "AttributeError: module 'a9a37b9e0fcca4488628a1751af42d7d' has no attribute 'allreduce_nccl'". This actually makes sense since in this
   commit the compile step has all of the nccl stuff commented out.
 - `test/quantize_test.py` -- fails with "FileNotFoundError: [Errno 2] No such file or directory: '/home/scott/quant_log.txt'", changed the logfile to `./quant_log.txt` then it works.
+
+## Publishing
+- Update `setup.py` with the appropriate version number.
+- Install `twine` (`pip3 install twine`) and configure it with your PyPi credentials.
 
 
 # Original README.md below

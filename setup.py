@@ -3,12 +3,9 @@
 import setuptools
 
 setuptools.setup(
-    name='blocksparse',
-    version='1.13.1',
+    name='kite-blocksparse',
+    version='1.15.2',
     description='Tensorflow ops for blocksparse matmul, transformer, convolution and related operations.',
-    author='OpenAI',
-    maintainer='Scott Gray',
-    maintainer_email='scott@openai.com',
     install_requires=[
         'numpy',
         'scipy',
@@ -16,5 +13,5 @@ setuptools.setup(
     ],
     packages=['blocksparse'],
     package_data={ 'blocksparse': ['blocksparse_ops.so'] },
-    url='https://github.com/openai/blocksparse',
+    url='https://github.com/kiteco/blocksparse',
     license='MIT')

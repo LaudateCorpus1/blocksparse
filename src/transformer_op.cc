@@ -5,7 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "cuda_stream.h"
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -13,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx);
 
@@ -86,7 +85,7 @@ class TopkOp : public OpKernel {
        uint* a_ptr = (uint*)a->flat<int32>().data();
     const V* x_ptr = (const V*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     TopK<V>(stream, y_ptr, a_ptr, x_ptr, topK, N, K, false);
   }
@@ -130,7 +129,7 @@ class RectifiedTopKOp : public OpKernel {
           V* y_ptr = (V*)y->flat<T>().data();
     const V* x_ptr = (const V*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     TopK<V>(stream, y_ptr, NULL, x_ptr, topK, N, K, rebase_);
   }
@@ -198,7 +197,7 @@ class MaskedTopKSoftmaxOp : public OpKernel {
            V* y_ptr = (      V*)y->flat<T>().data();
     const  V* x_ptr = (const V*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     MaskedTopKSoftmax<V>(stream, y_ptr, m_ptr, x_ptr, k.scalar<int32>()(), D0, D1, D2, D3, M1, M2, s.scalar<float>()());
   }
@@ -263,7 +262,7 @@ class MaskedSoftmaxOp : public OpKernel {
           V* y_ptr = (      V*)y->flat<T>().data();
     const V* x_ptr = (const V*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)
@@ -344,7 +343,7 @@ class MaskedSoftmaxGradOp : public OpKernel {
     const V* dy_ptr = (const V*)dy.flat<T>().data();
     const V*  y_ptr = (const V*)y.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)
@@ -398,7 +397,7 @@ class Transpose2DOp : public OpKernel {
     Tensor* y = NULL;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({D1, D0}), &y));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Transpose_2D<V1,V4>(stream, (V1*)y->flat<T>().data(), (const V1*)x.flat<T>().data(), D0, D1);
   }
@@ -448,7 +447,7 @@ class Transpose0213Op : public OpKernel {
           V* y_ptr = (      V*)y->flat<T>().data();
     const V* x_ptr = (const V*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Transpose_0213<V>(stream, y_ptr, x_ptr, D0, D1, D2, D3);
 
@@ -532,7 +531,7 @@ class SoftmaxCrossEntropyOp : public OpKernel
           float*   loss_ptr = (float*)loss->flat<float>().data();
           ehalf*   grad_ptr = (ehalf*)grad->flat<EHALF>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     SoftmaxCrossEntropy<TL>(stream, grad_ptr, loss_ptr, logits_ptr, labels_ptr, N, K);
   }
@@ -577,7 +576,7 @@ class SoftmaxCrossEntropyGradOp : public OpKernel
     const float* dy_ptr = (const float*)dy.flat<float>().data();
           ehalf* dx_ptr = (ehalf*)dx->flat<EHALF>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     SoftmaxCrossEntropyGrad(stream, SMs_, dx_ptr, dy_ptr, y_ptr, NK, K);
   }

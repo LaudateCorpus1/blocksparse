@@ -5,7 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "cuda_stream.h"
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -13,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx);
 
@@ -114,7 +113,7 @@ class QuantizeOp : public OpKernel {
     if (SMs_ == 0)
       SMs_ = GetCountSMs();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     const Tensor&  x = ctx->input(0);
     const Tensor& em = ctx->input(1);
@@ -263,7 +262,7 @@ class LogStatsOp : public OpKernel {
         Tensor s; OP_REQUIRES_OK(ctx, ctx->allocate_temp(DT_FLOAT, TensorShape({sizeof(QuantStats)/4}), &s));
         float* stats_ptr = s.flat<float>().data();
 
-        CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+        CUstream stream = get_custream(ctx);
 
         QuantStats stats = QuantizationStats<V>(stream, SMs_, stats_ptr, x_ptr, sat_val_, ftz_val_, size);
 

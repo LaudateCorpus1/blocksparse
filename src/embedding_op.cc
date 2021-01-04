@@ -5,7 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "cuda_stream.h"
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -13,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 
 REGISTER_OP("EmbeddingLookup")
@@ -88,7 +87,7 @@ class EmbeddingLookupOp : public OpKernel {
     const  V* emb_ptr = (const V*)emb.flat<T>().data();
     const TI* idx_ptr = idx.flat<TI>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)
@@ -177,7 +176,7 @@ class EmbeddingLookupGradOp : public OpKernel {
     const  V*  dy_ptr = (const V*)dy.flat<T>().data();
     const TI* idx_ptr = idx.flat<TI>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)

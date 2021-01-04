@@ -5,7 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "cuda_stream.h"
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -13,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 template <typename T, typename V> bool LSTM_Gates_Forward(CUstream stream, T* c_next, T* h_next, const T* c_prev, const T* h_prev, const float* bias, float forget_bias, int N, int K);
 template <typename T, typename V> bool LSTM4_Gates_Forward(CUstream stream, T* c_next, T* h_next, const T* c, const T* i, const T* f, const T* o, const T* u, float forget_bias, int N, int K);
@@ -79,7 +78,7 @@ class LSTMGatesOp : public OpKernel {
     const V1* c_prev_ptr = (const V1*)c_prev.flat<T>().data();
     const V1* h_prev_ptr = (const V1*)h_prev.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     LSTM_Gates_Forward<V1,V4>(stream, c_next_ptr, h_next_ptr, c_prev_ptr, h_prev_ptr, Bias, forget_bias_, N,  K);
   }
@@ -144,7 +143,7 @@ class LSTMGates4Op : public OpKernel {
     const V1* o_ptr = (const V1*)o.flat<T>().data();
     const V1* u_ptr = (const V1*)u.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     LSTM4_Gates_Forward<V1,V4>(stream, c_next_ptr, h_next_ptr, c_ptr, i_ptr, f_ptr, o_ptr, u_ptr, forget_bias_, N,  K);
   }
@@ -210,7 +209,7 @@ class LSTMGatesGradOp : public OpKernel {
     const VB1*     ec_ptr = grads.size() > 1 ? (const VB1*)grads[1].flat<B>().data() : nullptr;
     const float* bias_ptr = bias.size()  > 0 ? bias[0].flat<float>().data() : nullptr;
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     LSTM_Gates_Backward<VB1,VF1,VB4,VF4>(stream, dc_ptr, dh_ptr, ec_ptr, eh_ptr, c_prev_ptr, h_prev_ptr, bias_ptr, N, K, forget_bias_);
   }
@@ -299,7 +298,7 @@ class LSTMGates4GradOp : public OpKernel {
     if (ctx->num_inputs() == 7)
       ec_ptr = (const VB1*)ctx->input(6).flat<B>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     LSTM4_Gates_Backward<VB1,VF1,VB4,VF4>(stream, dc_ptr, di_ptr, df_ptr, do_ptr, du_ptr, ec_ptr, eh_ptr, c_ptr, i_ptr, f_ptr, o_ptr, u_ptr, N, K, forget_bias_);
   }
@@ -364,7 +363,7 @@ class Split4Op : public OpKernel {
     V1* z3_ptr = (V1*)z3->flat<T>().data();
     const V1* x_ptr = (const V1*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Split4_Forward<V1,V4>(stream, z0_ptr, z1_ptr, z2_ptr, z3_ptr, x_ptr, N,  K);
   }
@@ -417,7 +416,7 @@ class Concat4Op : public OpKernel {
     const V1* dz2_ptr = (const V1*)dz2.flat<T>().data();
     const V1* dz3_ptr = (const V1*)dz3.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Concat4_Forward<V1,V4>(stream, dx_ptr, dz0_ptr, dz1_ptr, dz2_ptr, dz3_ptr, N, K);
   }
@@ -457,7 +456,7 @@ class SparseReluOp : public OpKernel {
           V1* z_ptr = (V1*)z->flat<T>().data();
     const V1* x_ptr = (const V1*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     SparseReluForward<V1,V4>(stream, z_ptr, x_ptr, alpha.scalar<float>()(), K, N);
   }

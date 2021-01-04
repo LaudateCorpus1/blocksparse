@@ -5,7 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "cuda_stream.h"
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -13,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 
 template <typename V> bool Gemm_TN(CUstream stream, uint SMs, int major, float* u, const V* x, const V* e, uint C, uint K, uint N);
@@ -77,7 +76,7 @@ class DwMatmulLargeNOp : public OpKernel {
     const V4* x_ptr = (const V4*)x.flat<T>().data();
     const V4* e_ptr = (const V4*)e.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Gemm_TN(stream, SMs_, major_, u_ptr, x_ptr, e_ptr, C, K, N);
   }

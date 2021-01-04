@@ -36,7 +36,15 @@ TF_INC=$(shell python -c 'from os.path import dirname; import tensorflow as tf; 
 TF_LIB=$(shell python -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
 TF_ABI=$(shell python -c 'import tensorflow as tf; print(tf.__cxx11_abi_flag__ if "__cxx11_abi_flag__" in tf.__dict__ else 0)')
 
+TF_VERSION=$(shell python -c 'import tensorflow as tf; print(tf.__version__)')
+TF_NEW=0
+ifeq ($(TF_VERSION),1.15.2)
+	TF_LIB=$(shell python -c 'import tensorflow_core as tf; print(tf.sysconfig.get_lib())')
+	TF_NEW=1
+endif
+
 CCFLAGS=-std=c++11 -O3 -fPIC -DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) \
+	-DTF_NEW=$(TF_NEW) \
 	-I$(TARGET) \
 	-I$(NV_INC) \
 	-I$(TF_INC)/tensorflow/include \
@@ -46,7 +54,14 @@ CCFLAGS=-std=c++11 -O3 -fPIC -DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) 
 	-I$(MPI_INC) \
 	-I/usr/local
 
+ifeq ($(TF_VERSION),1.15.2)
+	CCFLAGS +=-I$(TF_INC)/tensorflow_core/include
+endif
+
+TF_CFLAGS := $(shell python -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
+
 NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPIC -std=c++11 --prec-div=false --prec-sqrt=false \
+	-g $(TF_CFLAGS) -x cu -DNDEBUG --expt-relaxed-constexpr \
  	-gencode=arch=compute_35,code=sm_35 \
 	-gencode=arch=compute_50,code=sm_50 \
 	-gencode=arch=compute_52,code=sm_52 \
@@ -56,6 +71,9 @@ NVCCFLAGS=-DGOOGLE_CUDA=1 -D_GLIBCXX_USE_CXX11_ABI=$(TF_ABI) -O3 -Xcompiler -fPI
  	-gencode=arch=compute_70,code=compute_70
 #   --keep --keep-dir tmp
 
+TF_LFLAGS := $(shell python -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
+LDFLAGS = -shared ${TF_LFLAGS}
+
 OBJS=\
 	$(TARGET)/batch_norm_op.o \
 	$(TARGET)/blocksparse_conv_op.o \
@@ -63,6 +81,7 @@ OBJS=\
 	$(TARGET)/blocksparse_l2_norm_op.o \
 	$(TARGET)/blocksparse_matmul_op.o \
 	$(TARGET)/bst_op.o \
+	$(TARGET)/cuda_stream.o \
 	$(TARGET)/cwise_linear_op.o \
 	$(TARGET)/edge_bias_op.o \
 	$(TARGET)/ew_op.o \
@@ -98,12 +117,13 @@ CU_OBJS=\
 	$(TARGET)/embedding_op_gpu.cu.o \
 	$(TARGET)/matmul_op_gpu.cu.o
 
+
 $(TARGET)/blocksparse_kernels.h: src/sass/*.sass
 	mkdir -p $(shell dirname $@)
 	python generate_kernels.py
 
 blocksparse/blocksparse_ops.so: $(OBJS) $(CU_OBJS)
-	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) -ltensorflow_framework -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi
+	g++ $^ -shared -o $@ -L$(TF_LIB) -L$(NV_LIB) ${LDFLAGS} -lcudart -lcuda -L$(NCCL_LIB) -L$(MPI_LIB) -lnccl -lmpi
 
 $(TARGET)/%.cu.o: src/%.cu $(TARGET)/blocksparse_kernels.h
 	mkdir -p $(shell dirname $@)
@@ -112,6 +132,8 @@ $(TARGET)/%.cu.o: src/%.cu $(TARGET)/blocksparse_kernels.h
 $(TARGET)/%.o: src/%.cc src/*.h $(TARGET)/blocksparse_kernels.h
 	mkdir -p $(shell dirname $@)
 	g++ $(CCFLAGS) -c $< -o $@
+
+
 
 
 # bazel-0.17.1-installer-linux-x86_64.sh (--user)

@@ -5,7 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
+#include "cuda_stream.h"
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -13,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx);
 
@@ -97,7 +96,7 @@ class Adafactor2dOp : public OpKernel {
     Tensor* x; OP_REQUIRES_OK(ctx, ctx->allocate_output(3,  param.shape(),      &x));
     Tensor* m; OP_REQUIRES_OK(ctx, ctx->allocate_output(4,  TensorShape({ 2 }), &m));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Adafactor<V1,V4>(stream, SMs_,
       cv.flat<float>().data(),
@@ -190,7 +189,7 @@ class Adafactor1dOp : public OpKernel {
     Tensor* x; OP_REQUIRES_OK(ctx, ctx->allocate_output(2,  param.shape(),      &x));
     Tensor* m; OP_REQUIRES_OK(ctx, ctx->allocate_output(3,  TensorShape({ 2 }), &m));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Adafactor<V1,V4>(stream, SMs_,
       cv.flat<float>().data(),
@@ -287,7 +286,7 @@ class BlocksparseAdamOp : public OpKernel {
     const float* lr_select_ptr  = lr_select.size()  > 0 ? lr_select[0].flat<float>().data()  : NULL;
     const float* norm_scale_ptr = norm_scale.size() > 0 ? norm_scale[0].flat<float>().data() : NULL;
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     uint blocks = param.dim_size(0);
     uint bsize  = param.dim_size(1);
@@ -400,7 +399,7 @@ class AdamOp : public OpKernel {
       size = param.shape().num_elements();
       K = 0;
     }
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     if (gate.size() > 0)
     {
@@ -477,7 +476,7 @@ class EmaOp : public OpKernel {
     OpInputList gate;
     ctx->input_list("gate", &gate);
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     if (gate.size() > 0)
     {
@@ -548,7 +547,7 @@ class BlocksparseL2DecayOp : public OpKernel {
     uint blocks = param.dim_size(0);
     uint bsize  = param.dim_size(1);
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BlocksparseL2Decay<V>(stream,
       (V*)param.flat<T>().data(),
@@ -599,7 +598,7 @@ class BlocksparseNormOp : public OpKernel {
     Tensor *norm;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0,  TensorShape({ blocks }), &norm));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BlocksparseNorm<V>(stream,
       norm->flat<float>().data(),
@@ -662,7 +661,7 @@ class BlocksparsePruneOp : public OpKernel {
         uint blocks = gate.dim_size(0);
         uint keep   = (uint)((float)blocks * keep_frac + 0.5f);
 
-        CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+        CUstream stream = get_custream(ctx);
 
         BlocksparsePrune(stream, SMs_,
           gate.flat<float>().data(),
@@ -724,7 +723,7 @@ class BlocksparseThresholdPruneOp : public OpKernel {
       uint blocks = param.dim_size(0);
       uint bsize  = param.dim_size(1);
 
-      CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+      CUstream stream = get_custream(ctx);
 
       BlocksparseThresholdPrune<V>(stream,
         (const V*)param.flat<T>().data(),
@@ -782,7 +781,7 @@ class ClipGlobalNormOp : public OpKernel
     if (SMs_ == 0)
       SMs_ = GetCountSMs();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     float grad_scale = ctx->input(0).scalar<float>()();
     float clip_norm  = ctx->input(1).scalar<float>()();
