@@ -5,21 +5,14 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
+#include "gpu_types.h"
 #include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
 
 using namespace tensorflow;
 
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
-
-#include "gpu_types.h"
 
 static void ClosestDivisorTo4(uint val, bool isA, uint* div, uint* res)
 {
@@ -181,7 +174,8 @@ public:
               T1* pC = (      T1*)C->flat<T>().data();
 
         if (is_gpu_)
-            params_.stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+            params_.stream = get_custream(ctx);
+            
 
         Benchmark* bench = nullptr;
         if (bench_) bench = new Benchmark(params_.stream, bench_string_, 0, flops_ * params_.N * params_.pcount, repeat_, is_gpu_);
@@ -279,7 +273,7 @@ public:
         params_.Gate = gated_dw_ && gate.size() > 0 ? gate[0].flat<float>().data() : NULL;
 
         if (is_gpu_)
-            params_.stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+            params_.stream = get_custream(ctx);
 
         Benchmark* bench = nullptr;
         if (bench_) bench = new Benchmark(params_.stream, bench_string_, 0, flops_ * params_.N * params_.pcount, repeat_, is_gpu_);
@@ -529,7 +523,7 @@ class BlocksparseMatmulDGOp : public OpKernel {
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, dw.shape(), &dw_out));
     OP_REQUIRES_OK(ctx, ctx->allocate_output(1,  g.shape(), &dg));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BlocksparseGateGrad<V>(stream,
       (V*)dw_out->flat<T>().data(),
@@ -582,7 +576,7 @@ class BlocksparseMatmulIdentityInitOp : public OpKernel {
         float*   w_ptr = w->flat<float>().data();
     const int* lut_ptr = ctx->input(0).flat<int32>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     IdentityInitCK(stream, w_ptr, lut_ptr, CB_, KB_, blocks_, bsize_, scale_);
   }
@@ -752,7 +746,7 @@ public:
         ehalf* RedX = (ehalf*)redX->flat<EHALF>().data();
         ehalf* RedY = (ehalf*)redY->flat<EHALF>().data();
 
-        CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+        CUstream stream = get_custream(ctx);
 
         if (scale != 0.0f)
         {

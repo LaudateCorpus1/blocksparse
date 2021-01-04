@@ -5,13 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
 #include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
-
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -19,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx);
 
@@ -156,7 +149,7 @@ class LayerNormOp : public OpKernel {
     const float*    g_ptr = g.flat<float>().data();
     const float*    b_ptr = b.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_) bench = new Benchmark(stream, "LayerNormForward", N*S_*K_*2*sizeof(T), 0, repeat_);
@@ -290,7 +283,7 @@ class LayerNormGradOp : public OpKernel {
     const float* mean_ptr = mean.flat<float>().data();
     const float* rstd_ptr = rstd.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_) bench = new Benchmark(stream, "LayerNormBackward", N*S_*K_*5*sizeof(T), 0, repeat_);
@@ -397,7 +390,7 @@ class GatherScatterOp : public OpKernel {
     const  V1* x_ptr = (const V1*)x.flat<T>().data();
     const int* l_ptr = lut.flat<int32>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     SparseOp<V1,V4,V8>(stream, y_ptr, x_ptr, 0, l_ptr, op_, K_, N);
   }
@@ -466,7 +459,7 @@ class ScatterAddMulOp : public OpKernel {
     const V1* x_ptr = (const V1*)x.flat<T>().data();
     const V1* y_ptr = (const V1*)y.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     SparseOp<V1,V4,V8>(stream, z_ptr, x_ptr, y_ptr, l_ptr, op_, K, N);
   }
@@ -526,7 +519,7 @@ class ScatterMulGradOp : public OpKernel {
     const  V1*  y_ptr = (const V1*)y.flat<T>().data();
     const int*  l_ptr = lut.flat<int32>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     SparseMulGrad<V1,V4,V8>(stream, dx_ptr, dy_ptr, dz_ptr, x_ptr, y_ptr, l_ptr, C_, N);
   }

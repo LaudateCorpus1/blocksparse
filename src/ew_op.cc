@@ -5,13 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
 #include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
-
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -19,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx) {
@@ -62,7 +55,7 @@ class EwZXyOp : public OpKernel {
     const V1* x_ptr = (const V1*)x.flat<T>().data();
     const V1* y_ptr = (const V1*)y.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Forward<V1,V4>(stream, z_ptr, x_ptr, y_ptr, 0, 1.0f, size, 0, op_);
   }
@@ -105,7 +98,7 @@ class EwZXaOp : public OpKernel {
           V1* z_ptr = (V1*)z->flat<T>().data();
     const V1* x_ptr = (const V1*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Forward<V1,V4>(stream, z_ptr, x_ptr, 0, 0, alpha_, size, 0, op_);
   }
@@ -153,7 +146,7 @@ class EwZXbOp : public OpKernel {
     const    V1* x_ptr = (const V1*)x.flat<T>().data();
     const float* b_ptr = b.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Forward<V1,V4>(stream, z_ptr, x_ptr, 0, b_ptr, 1.0f, K, N, op_);
   }
@@ -208,7 +201,7 @@ class EwDxdyDzxyOp : public OpKernel {
     const VF1*  x_ptr = (const VF1*)x.flat<F>().data();
     const VF1*  y_ptr = (const VF1*)y.flat<F>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Backward<VB1,VF1,VB4,VF4>(stream, dx_ptr, dy_ptr, 0, dz_ptr, x_ptr, y_ptr, 0, 0, 1.0f, size, 0, op_);
   }
@@ -255,7 +248,7 @@ class EwDxDzzaOp : public OpKernel {
     const VB1* dz_ptr = (const VB1*)dz.flat<B>().data();
     const VF1*  z_ptr = (const VF1*)z.flat<F>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Backward<VB1,VF1,VB4,VF4>(stream, dx_ptr, 0, 0, dz_ptr, 0, 0, z_ptr, 0, alpha_, size, 0, op_);
   }
@@ -304,7 +297,7 @@ class EwDxDzxaOp : public OpKernel {
     const VB1* dz_ptr = (const VB1*)dz.flat<B>().data();
     const VF1*  x_ptr = (const VF1*)x.flat<F>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Backward<VB1,VF1,VB4,VF4>(stream, dx_ptr, 0, 0, dz_ptr, x_ptr, 0, 0, 0, alpha_, size, 0, op_);
   }
@@ -355,7 +348,7 @@ class EwDbDzbOp : public OpKernel {
           float* db_ptr = db->flat<float>().data();
     const   VB1* dz_ptr = (const VB1*)dz.flat<B>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Backward<VB1,VB1,VB4,VB4>(stream, 0, 0, db_ptr, dz_ptr, 0, 0, 0, 0, 1.0f, K, N, op_);
   }
@@ -414,7 +407,7 @@ class EwDxdgDzxgOp : public OpKernel {
     const   VF1*  x_ptr = (const VF1*)x.flat<F>().data();
     const float*  g_ptr = g.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Backward<VB1,VF1,VB4,VF4>(stream, dx_ptr, 0, dg_ptr, dz_ptr, x_ptr, 0, 0, g_ptr, 1.0f, K, N, op_);
   }
@@ -469,7 +462,7 @@ class FilterTensorOp : public OpKernel
     const V1* x_ptr = (const V1*)x.flat<T>().data();
           V1* y_ptr = (      V1*)y->flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     //printf("scale: %f\n", scale);
 
@@ -515,7 +508,7 @@ class FloatCastOp : public OpKernel {
           VY1* y_ptr = (VY1*)y->flat<TY>().data();
     const VX1* x_ptr = (const VX1*)x.flat<TX>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     FloatCast<VY1,VX1,VY4,VX4>(stream, y_ptr, x_ptr, size);
   }
@@ -585,7 +578,7 @@ class GenDropoutMaskOp : public OpKernel {
     Tensor* mask = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({ CEIL_DIV(size, 32) }), &mask));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     GenDropoutMask(stream, SMs_, (uint*)e.flat<float>().data(), (uint*)mask->flat<int32>().data(), keep_prob, size);
   }
@@ -682,7 +675,7 @@ class ApplyDropoutMaskOp : public OpKernel {
     const   V1* x_ptr = (const   V1*)x.flat<T>().data();
     const uint* m_ptr = (const uint*)m.flat<int32>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     ApplyDropoutMask<V1,V4,V8>(stream, SMs, y_ptr, x_ptr, m_ptr, scale, size, rank, xs, ms);
   }
@@ -733,7 +726,7 @@ class AddN8Op : public OpKernel {
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, x0.shape(), &z));
     V1* z_ptr = (V1*)z->flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     AddN<V1,V4>(stream, SMs, &x8, z_ptr, size, params);
   }
@@ -796,7 +789,7 @@ class BiasReluOp : public OpKernel {
     const    V1* x_ptr = (const V1*)x.flat<T>().data();
     const float* b_ptr = b.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)
@@ -893,7 +886,7 @@ class BiasReluGradOp : public OpKernel {
     const    V1*  y_ptr = (const V1*)y.flat<T>().data();
     const float*  b_ptr = b.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)
@@ -982,7 +975,7 @@ class BiasGradOp : public OpKernel {
           float* db_ptr = (   float*)db->flat<float>().data();
     const    V1* dy_ptr = (const V1*)dy.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_)
@@ -1073,7 +1066,7 @@ class FancyGatherOp : public OpKernel {
     const TA* a_ptr = (const TA*)a.flat<TA>().data();
     const V1* x_ptr = (const V1*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Fancy_Gather<V1,TA>(stream, y_ptr, a_ptr, x_ptr, dim0, dim1, dim2);
   }
@@ -1157,7 +1150,7 @@ class FancyGatherGradOp : public OpKernel {
     const V1* dy_ptr = (const V1*)dy.flat<T>().data();
     const TA*  a_ptr = (const TA*)a.flat<TA>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Fancy_Gather_Grad<V1,TA>(stream, dx_ptr, a_ptr, dy_ptr, dim0, dim1, dim2);
   }
@@ -1261,7 +1254,7 @@ class ReduceMaxOp : public OpKernel {
           TA* a_ptr = (      TA*)a->flat<TA>().data();
     const V1* x_ptr = (const V1*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Reduce_Max<V1,TA>(stream, y_ptr, a_ptr, x_ptr, dim0, dim1, dim2);
 
@@ -1369,7 +1362,7 @@ class ReduceMaxGradOp : public OpKernel {
     const V1* dy_ptr = (const V1*)dy.flat<T>().data();
     const TA*  a_ptr = (const TA*)a.flat<TA>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     EW_Reduce_Max_Grad<V1,TA>(stream, dx_ptr, a_ptr, dy_ptr, dim0, dim1, dim2);
 
@@ -1431,7 +1424,7 @@ class ConcreteGateOp : public OpKernel {
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, loga.shape(), &gate));
     OP_REQUIRES_OK(ctx, ctx->allocate_output(1, loga.shape(), &conc));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     ConcreteGate(stream, SMs,
       (uint*)entr.flat<float>().data(),
@@ -1481,7 +1474,7 @@ class ConcreteGateGradOp : public OpKernel {
     Tensor* dloga = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, dg.shape(), &dloga));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     ConcreteGateGrad(stream, SMs,
       dloga->flat<float>().data(),
@@ -1527,7 +1520,7 @@ class ConcreteGateInferOp : public OpKernel {
     Tensor* gate = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, loga.shape(), &gate));
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     ConcreteGateInfer(stream, SMs,
       gate->flat<float>().data(),
@@ -1572,7 +1565,7 @@ class AssignAddOp : public OpKernel
           V1* y_ptr = (      V1*)y.flat<T>().data();
     const V1* x_ptr = (const V1*)x.flat<T>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     AssignAdd<V1,V4>(stream, SMs_, y_ptr, x_ptr, size);
   }

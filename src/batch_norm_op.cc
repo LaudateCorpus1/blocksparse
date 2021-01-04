@@ -5,21 +5,14 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
-#include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
-
 #include "gpu_types.h"
+#include "cuda_stream.h"
 
 using namespace tensorflow;
 
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 template <typename T> bool BatchNormNCDHW_Inference(
   CUstream stream, T* y, const float* m, const float* v, const T* x, const float* g, const float* b,
@@ -72,7 +65,7 @@ class BatchNormInferenceNCDHWOp : public OpKernel {
     const float* m_ptr = m.flat<float>().data();
     const float* v_ptr = v.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BatchNormNCDHW_Inference<V>(stream, y_ptr, m_ptr, v_ptr, x_ptr, g_ptr, b_ptr, N, C, DHW_, eps_);
   }
@@ -144,7 +137,7 @@ class BatchNormNCDHWOp : public OpKernel {
     const float* g_ptr = g.flat<float>().data();
     const float* b_ptr = b.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BatchNormNCDHW_Forward<V>(stream, y_ptr, m_ptr, v_ptr, x_ptr, g_ptr, b_ptr, N, C, DHW_, magic_DHW_, shift_DHW_, eps_);
   }
@@ -223,7 +216,7 @@ class BatchNormGradNCDHWOp : public OpKernel {
     const float*  m_ptr = m.flat<float>().data();
     const float*  v_ptr = v.flat<float>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BatchNormNCDHW_Backward<VX,VY>(stream, dx_ptr, dg_ptr, db_ptr, dy_ptr, x_ptr, g_ptr, m_ptr, v_ptr, N, C, DHW_, magic_DHW_, shift_DHW_, eps_);
   }

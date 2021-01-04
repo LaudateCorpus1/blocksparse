@@ -5,13 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
 #include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
-
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -19,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx);
 
@@ -222,7 +215,7 @@ class BlocksparseTransformerOp : public OpKernel {
 
     const uint2* l_ptr = (const uint2*)lut.flat<int32>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_) bench = new Benchmark(stream, bench_string_, 0, flops_ * (float)(batch_dim * state_dim), repeat_);
@@ -294,7 +287,7 @@ class BlocksparseTransformerOp : public OpKernel {
 
     const uint2* l_ptr = (const uint2*)lut.flat<int32>().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     Benchmark* bench = nullptr;
     if (bench_) bench = new Benchmark(stream, bench_string_, 0, flops_ * (float)(batch_dim * state_dim), repeat_);
@@ -421,7 +414,7 @@ class BlocksparseMaskedSoftmaxOp : public OpKernel {
     const bhalf* x_ptr = (const bhalf*)x.tensor_data().data();
     float scale = s.scalar<float>()();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     if (y->dtype() == DT_HALF)
       BlocksparseMaskedSoftmax<ehalf,ehalf2>(stream, l_ptr, m_ptr, x_ptr, (ehalf*)y->tensor_data().data(), blk_size_, blocks_, batch_dim, head_dim, ctx_blks_, lut_heads, lut_dim, lut_max_, mask_heads, scale);
@@ -494,7 +487,7 @@ class BlocksparseMaskedSoftmaxGradOp : public OpKernel {
     const uint2* l_ptr = (const uint2*)lut.flat<int32>().data();
     float scale = s.scalar<float>()();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     if (dy.dtype() == DT_HALF)
     {
@@ -572,7 +565,7 @@ class PartialAutoregressiveMaskOp : public OpKernel {
     const  char* m_ptr = mask.tensor_data().data();
            char* o_ptr = (char*)out->tensor_data().data();
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     BstPartialAutoregressiveMask(stream, l_ptr, m_ptr, o_ptr, blk_size_, blocks_, lut_heads, lut_dim, key);
   }

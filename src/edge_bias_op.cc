@@ -5,13 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
 #include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
-
 #include "gpu_types.h"
 
 
@@ -20,7 +14,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 
 template <typename T> bool EdgeBiasForward (CUstream stream, T* y, const T* x, const float* g, const float* b, const int* lut, uint edges, uint MPQ, uint K, uint N, int layout, bool inference);
@@ -86,7 +79,7 @@ class EdgeBiasOp : public OpKernel {
 
       edges = b.dim_size(0);
     }
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     const V*     x_ptr = (V*)x.flat<T>().data();
     const float* g_ptr = g.flat<float>().data();
@@ -193,7 +186,7 @@ class EdgeBiasGradOp : public OpKernel {
 
       edges = g.dim_size(0);
     }
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     // in place
     ctx->set_output(0, dy);

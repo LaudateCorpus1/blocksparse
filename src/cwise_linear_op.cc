@@ -5,13 +5,7 @@
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/stream_executor.h"
-
-#if TF_NEW
 #include "cuda_stream.h"
-#else
-#include "tensorflow/stream_executor/cuda/cuda_stream.h"
-#endif
-
 #include "gpu_types.h"
 
 using namespace tensorflow;
@@ -19,7 +13,6 @@ using namespace tensorflow;
 using shape_inference::DimensionHandle;
 using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
-using perftools::gputools::cuda::CUDAStream;
 
 Status UnchangedShape(shape_inference::InferenceContext* ctx);
 
@@ -77,7 +70,7 @@ class CWiseLinearOp : public OpKernel {
     const float* a_ptr = a.size() ? a[0].flat<float>().data() : NULL;
     const float* b_ptr = b.size() ? b[0].flat<float>().data() : NULL;
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     CWiseLinear_Forward<V>(stream, y_ptr, x_ptr, a_ptr, b_ptr, N, C, DHW, relu_, swap_);
   }
@@ -189,7 +182,7 @@ class CWiseLinearGradOp : public OpKernel {
     const float*  a_ptr = a.size()  ? a[0].flat<float>().data()        : NULL;
     const float*  b_ptr = b.size()  ? b[0].flat<float>().data()        : NULL;
 
-    CUstream stream = ((CUDAStream*)ctx->op_device_context()->stream()->implementation())->cuda_stream();
+    CUstream stream = get_custream(ctx);
 
     CWiseLinear_Backward<V>(stream, dx_ptr, da_ptr, db_ptr, dy_ptr, xy_ptr, a_ptr, b_ptr, N, C, DHW, relu_, swap_);
   }
