@@ -106,7 +106,7 @@ TF 1.13.1 above.
 - `test/blocksparse_matmul_bench.py` -- fails with "got an unexpected keyword argument 'dw_dtype'".
 - `test/blocksparse_reduced_dw_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
 - `test/blocksparse_transformer_test.py` -- fails with "InvalidArgumentError (see above for traceback): Tensorcore GPU required".
-- `test/edge_bias.py` -- hangs and nothing ever happens.
+- `test/edge_bias_test.py` -- hangs and nothing ever happens.
 - `test/nccl_test.py` -- fails with "AttributeError: module 'a9a37b9e0fcca4488628a1751af42d7d' has no attribute 'allreduce_nccl'". This actually makes sense since in this
   commit the compile step has all of the nccl stuff commented out.
 - `test/quantize_test.py` -- fails with "FileNotFoundError: [Errno 2] No such file or directory: '/home/scott/quant_log.txt'", changed the logfile to `./quant_log.txt` then it works.
