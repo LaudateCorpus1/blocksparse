@@ -106,10 +106,13 @@ TF 1.13.1 above.
   commit the compile step has all of the nccl stuff commented out.
 - `test/quantize_test.py` -- fails with "FileNotFoundError: [Errno 2] No such file or directory: '/home/scott/quant_log.txt'", changed the logfile to `./quant_log.txt` then it works.
 
-## Publishing
+## Publishing TF 1.15.2
+NOTE: this is typically done outside the docker container or you will need to place github credentials inside the docker container.
+
+- Build the `.so` file using instructions above and add it to github repo.
 - Update `setup.py` with the appropriate version number.
 - Install `twine` (`pip3 install twine`) and configure it with your PyPi credentials.
-
+- Release: `make release`
 
 # Original README.md below
 
