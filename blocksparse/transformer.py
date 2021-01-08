@@ -492,7 +492,7 @@ masked_softmax_grad_op  = _op_module.masked_softmax_grad
 ew_dx_dzza_op           = _op_module.ew_dx_dzza
 
 def top_k(x, k):
-    assert k <= x.shape[-1].val <= 1024
+    assert k <= x.shape[-1].value <= 1024
     return top_k_op(x, k)
 
 def rectified_top_k(x, k, rebase=True):
