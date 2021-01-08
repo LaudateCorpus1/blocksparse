@@ -4,8 +4,8 @@ import setuptools
 
 setuptools.setup(
     name='blocksparse-kite',
-    version='1.15.2',
-    description='Tensorflow ops for blocksparse matmul, transformer, convolution and related operations.',
+    version='1.15.3',
+    description='Built with TF 1.15.2. Tensorflow ops for blocksparse matmul, transformer, convolution and related operations.',
     install_requires=[
         'numpy',
         'scipy',
