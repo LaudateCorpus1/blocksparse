@@ -7,6 +7,12 @@
 template <typename T, uint STOCHASTIC, uint THREADS, uint UNROLL>
 __global__ void __launch_bounds__(THREADS) quantize(uint* E, T* Y, const T* X, float round_scale, uint trunc_mask, float max_float, float min_float, uint exp_norm, uint size)
 {
+    #if __CUDA_ARCH__ < 320
+        // TODO: this is a hack so we can build the tfserving version of these ops properly
+        // ideally we could not build for old architectures or make thing
+        // backwards compatible
+        return;
+    #endif
     const uint tid = threadIdx.x;
     const uint bid = blockIdx.x;
 
