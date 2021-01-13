@@ -12,98 +12,99 @@ __global__ void __launch_bounds__(THREADS) quantize(uint* E, T* Y, const T* X, f
         // ideally we could not build for old architectures or make thing
         // backwards compatible
         return;
-    #endif
-    const uint tid = threadIdx.x;
-    const uint bid = blockIdx.x;
+    #else
+        const uint tid = threadIdx.x;
+        const uint bid = blockIdx.x;
 
-    const uint offsetX = bid       * THREADS * UNROLL + tid;
-    const uint strideX = gridDim.x * THREADS * UNROLL;
+        const uint offsetX = bid       * THREADS * UNROLL + tid;
+        const uint strideX = gridDim.x * THREADS * UNROLL;
 
-    if (offsetX < size)
-    {
-        uint lfsr0, lfsr1, lfsr2;
-        if (STOCHASTIC == 1)
+        if (offsetX < size)
         {
-            // Grab some entropy wherever we can and evenly distribute it
-            uint idx = bid * THREADS + tid;
-            asm("mov.b32 %0, %%clock_hi;"       : "=r"(lfsr0) :);
-            asm("mov.b32 %0, %%clock;"          : "=r"(lfsr1) :);
-            asm("mov.b32 %0, %%globaltimer_lo;" : "=r"(lfsr2) :);
-            asm("shf.r.clamp.b32 %0,%0,%0,%1;"  : "=r"(lfsr0) : "r"((lfsr0^tid) & 31)); // rotate bits
-            asm("shf.r.clamp.b32 %0,%0,%0,%1;"  : "=r"(lfsr1) : "r"((lfsr1^tid) & 31)); // rotate bits
-            asm("shf.r.clamp.b32 %0,%0,%0,%1;"  : "=r"(lfsr2) : "r"((lfsr2^tid) & 31)); // rotate bits
-            lfsr0 ^= idx ^ (idx << 5)  ^ (idx << 11) ^ (idx << 17) ^ (idx << 23);
-        }
-        else if (STOCHASTIC == 2)
-        {
-            lfsr0 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*0 + bid*THREADS + tid));
-            lfsr1 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*1 + bid*THREADS + tid));
-            lfsr2 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*2 + bid*THREADS + tid));
-        }
-
-        #pragma unroll 1
-        for (uint offset = offsetX; offset < size; offset += strideX)
-        {
-            const T* Xp = add_ptr_u(X, offset);
-                  T* Yp = add_ptr_u(Y, offset);
-
-            #pragma unroll
-            for (uint j = 0; j < UNROLL; j++)
+            uint lfsr0, lfsr1, lfsr2;
+            if (STOCHASTIC == 1)
             {
-                bool in_bounds = offset + j*THREADS < size;
+                // Grab some entropy wherever we can and evenly distribute it
+                uint idx = bid * THREADS + tid;
+                asm("mov.b32 %0, %%clock_hi;"       : "=r"(lfsr0) :);
+                asm("mov.b32 %0, %%clock;"          : "=r"(lfsr1) :);
+                asm("mov.b32 %0, %%globaltimer_lo;" : "=r"(lfsr2) :);
+                asm("shf.r.clamp.b32 %0,%0,%0,%1;"  : "=r"(lfsr0) : "r"((lfsr0^tid) & 31)); // rotate bits
+                asm("shf.r.clamp.b32 %0,%0,%0,%1;"  : "=r"(lfsr1) : "r"((lfsr1^tid) & 31)); // rotate bits
+                asm("shf.r.clamp.b32 %0,%0,%0,%1;"  : "=r"(lfsr2) : "r"((lfsr2^tid) & 31)); // rotate bits
+                lfsr0 ^= idx ^ (idx << 5)  ^ (idx << 11) ^ (idx << 17) ^ (idx << 23);
+            }
+            else if (STOCHASTIC == 2)
+            {
+                lfsr0 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*0 + bid*THREADS + tid));
+                lfsr1 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*1 + bid*THREADS + tid));
+                lfsr2 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*2 + bid*THREADS + tid));
+            }
 
-                float x = load(Xp, j*THREADS, in_bounds);
+            #pragma unroll 1
+            for (uint offset = offsetX; offset < size; offset += strideX)
+            {
+                const T* Xp = add_ptr_u(X, offset);
+                    T* Yp = add_ptr_u(Y, offset);
 
-                float rscale = round_scale;
-                if (STOCHASTIC)
+                #pragma unroll
+                for (uint j = 0; j < UNROLL; j++)
                 {
-                    // tausworthe generator (low quality rng is just fine)
-                    lfsr0 = ((lfsr0 & 0xfffffffe) << 12) ^ (((lfsr0 << 13) ^ lfsr0) >> 19);
-                    lfsr1 = ((lfsr1 & 0xfffffff8) <<  4) ^ (((lfsr1 << 2)  ^ lfsr1) >> 25);
-                    lfsr2 = ((lfsr2 & 0xfffffff0) << 11) ^ (((lfsr2 << 3)  ^ lfsr2) >> 11);
-                    rscale *= (float)(lfsr0 ^ lfsr1 ^ lfsr2);
-                }
+                    bool in_bounds = offset + j*THREADS < size;
 
-                asm("{                                     \n\t"
-                    ".reg .f32 sign_exp, val;              \n\t"
-                    "and.b32 sign_exp, %0, 0xff800000;     \n\t" // extract sign/exponent
-                    "fma.rz.ftz.f32 val, sign_exp, %1, %0; \n\t" // add the round amount just below the final ulp position
-                    "and.b32 %0, val, %2;                  \n\t" // truncate off unused mantissa
-                    "}" : "+f"(x) : "f"(rscale), "r"(trunc_mask));
+                    float x = load(Xp, j*THREADS, in_bounds);
 
-                x = fmaxf(x, -max_float);
-                x = fminf(x,  max_float);
-                if (fabs(x) < min_float)
-                    x = 0.0f;
-                else
-                {
-                    // Denorm Quantization:
-                    // First subtract value off of exponent that will bring min_float to an unbiased exponent of 1.
-                    // Then mul by 2**-23 to force truncation of any unused sub normal bits.
-                    // Then scale back to origal exponent by reversing this process.
-                    asm("{                            \n\t"
-                        ".reg .f32 f;                 \n\t"
-                        ".reg .u32 u;                 \n\t"
-                        "mov.b32 u, %0;               \n\t"
-                        "sub.u32 u, u, %1;            \n\t"
-                        "mov.b32 f, u;                \n\t"
-                        "mul.rn.f32 f, f, 0F34000000; \n\t" // 2 **-23, round to nearest denorm
-                        "mul.rz.f32 f, f, 0F4b000000; \n\t" // 2 ** 23
-                        "mov.b32 u, f;                \n\t"
-                        "add.u32 u, u, %1;            \n\t"
-                        "mov.b32 %0, u;               \n\t"
-                        "}" : "+f"(x) : "r"(exp_norm));
+                    float rscale = round_scale;
+                    if (STOCHASTIC)
+                    {
+                        // tausworthe generator (low quality rng is just fine)
+                        lfsr0 = ((lfsr0 & 0xfffffffe) << 12) ^ (((lfsr0 << 13) ^ lfsr0) >> 19);
+                        lfsr1 = ((lfsr1 & 0xfffffff8) <<  4) ^ (((lfsr1 << 2)  ^ lfsr1) >> 25);
+                        lfsr2 = ((lfsr2 & 0xfffffff0) << 11) ^ (((lfsr2 << 3)  ^ lfsr2) >> 11);
+                        rscale *= (float)(lfsr0 ^ lfsr1 ^ lfsr2);
+                    }
+
+                    asm("{                                     \n\t"
+                        ".reg .f32 sign_exp, val;              \n\t"
+                        "and.b32 sign_exp, %0, 0xff800000;     \n\t" // extract sign/exponent
+                        "fma.rz.ftz.f32 val, sign_exp, %1, %0; \n\t" // add the round amount just below the final ulp position
+                        "and.b32 %0, val, %2;                  \n\t" // truncate off unused mantissa
+                        "}" : "+f"(x) : "f"(rscale), "r"(trunc_mask));
+
+                    x = fmaxf(x, -max_float);
+                    x = fminf(x,  max_float);
+                    if (fabs(x) < min_float)
+                        x = 0.0f;
+                    else
+                    {
+                        // Denorm Quantization:
+                        // First subtract value off of exponent that will bring min_float to an unbiased exponent of 1.
+                        // Then mul by 2**-23 to force truncation of any unused sub normal bits.
+                        // Then scale back to origal exponent by reversing this process.
+                        asm("{                            \n\t"
+                            ".reg .f32 f;                 \n\t"
+                            ".reg .u32 u;                 \n\t"
+                            "mov.b32 u, %0;               \n\t"
+                            "sub.u32 u, u, %1;            \n\t"
+                            "mov.b32 f, u;                \n\t"
+                            "mul.rn.f32 f, f, 0F34000000; \n\t" // 2 **-23, round to nearest denorm
+                            "mul.rz.f32 f, f, 0F4b000000; \n\t" // 2 ** 23
+                            "mov.b32 u, f;                \n\t"
+                            "add.u32 u, u, %1;            \n\t"
+                            "mov.b32 %0, u;               \n\t"
+                            "}" : "+f"(x) : "r"(exp_norm));
+                    }
+                    store(Yp, x, j*THREADS, in_bounds);
                 }
-                store(Yp, x, j*THREADS, in_bounds);
+            }
+            if (STOCHASTIC == 2)
+            {
+                __stg(add_ptr_u(E, gridDim.x*THREADS*0 + bid*THREADS + tid), lfsr0);
+                __stg(add_ptr_u(E, gridDim.x*THREADS*1 + bid*THREADS + tid), lfsr1);
+                __stg(add_ptr_u(E, gridDim.x*THREADS*2 + bid*THREADS + tid), lfsr2);
             }
         }
-        if (STOCHASTIC == 2)
-        {
-            __stg(add_ptr_u(E, gridDim.x*THREADS*0 + bid*THREADS + tid), lfsr0);
-            __stg(add_ptr_u(E, gridDim.x*THREADS*1 + bid*THREADS + tid), lfsr1);
-            __stg(add_ptr_u(E, gridDim.x*THREADS*2 + bid*THREADS + tid), lfsr2);
-        }
-    }
+    #endif
 }
 
 
