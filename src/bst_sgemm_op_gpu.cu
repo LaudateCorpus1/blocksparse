@@ -109,16 +109,16 @@ __global__ void __launch_bounds__(128,6) bst_sgemm_32x64x32_xn(
             uint2 entry = Lut2s[idx_lut];
 
             const bhalf* pA = add_ptr_u(A, entry.x + offsetA);
-            bhalf4 a00 = __ldg((const bhalf4*)(pA +  0*32));
-            bhalf4 a16 = __ldg((const bhalf4*)(pA + 16*32));
+            bhalf4 a00 = ldg((const bhalf4*)(pA +  0*32));
+            bhalf4 a16 = ldg((const bhalf4*)(pA + 16*32));
             float4 b00 = {0.0f}, b08 = {0.0f}, b16 = {0.0f}, b24 = {0.0f};
             entry.y += offsetB;
             if (inB)
             {
-                b00 = __ldg((const float4*)(B + (entry.y +  0*szHeadState)));
-                b08 = __ldg((const float4*)(B + (entry.y +  8*szHeadState)));
-                b16 = __ldg((const float4*)(B + (entry.y + 16*szHeadState)));
-                b24 = __ldg((const float4*)(B + (entry.y + 24*szHeadState)));
+                b00 = ldg((const float4*)(B + (entry.y +  0*szHeadState)));
+                b08 = ldg((const float4*)(B + (entry.y +  8*szHeadState)));
+                b16 = ldg((const float4*)(B + (entry.y + 16*szHeadState)));
+                b24 = ldg((const float4*)(B + (entry.y + 24*szHeadState)));
             }
             __syncthreads();
 
@@ -291,10 +291,10 @@ __global__ void __launch_bounds__(256,3) bst_sgemm_32x32x64_nt(
         float4 b00 = {0}, b16 = {0};
         if (K64 || k < szState)
         {
-            a00 = __ldg((const float4*)(add_ptr_u(A, offsetA00)));
-            a16 = __ldg((const float4*)(add_ptr_u(A, offsetA16)));
-            b00 = __ldg((const float4*)(add_ptr_u(B, offsetB00)));
-            b16 = __ldg((const float4*)(add_ptr_u(B, offsetB16)));
+            a00 = ldg((const float4*)(add_ptr_u(A, offsetA00)));
+            a16 = ldg((const float4*)(add_ptr_u(A, offsetA16)));
+            b00 = ldg((const float4*)(add_ptr_u(B, offsetB00)));
+            b16 = ldg((const float4*)(add_ptr_u(B, offsetB16)));
         }
         offsetA00 += 64;
         offsetA16 += 64;

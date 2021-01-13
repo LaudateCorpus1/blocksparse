@@ -63,13 +63,13 @@ __global__ void __launch_bounds__(128) gemm_32x32x32_TN_vec4(float* U, const V* 
         const V* E16 = add_ptr_u(E, offsetK + K16);
         if (bc)
         {
-            c00 = __ldg(X00);
-            c16 = __ldg(X16);
+            c00 = ldg(X00);
+            c16 = ldg(X16);
         }
         if (bk)
         {
-            k00 = __ldg(E00);
-            k16 = __ldg(E16);
+            k00 = ldg(E00);
+            k16 = ldg(E16);
         }
         offsetC += inc_c;
         offsetK += inc_k;

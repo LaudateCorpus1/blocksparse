@@ -167,7 +167,7 @@ __global__ void masked_top_k_softmax(T* Y, const float* __restrict__ M, const T*
     M = add_ptr_u(M, offsetM);
     X = add_ptr_u(X, offsetX);
 
-    float mask = tid < D3 ? (use_mask ? __ldg(M) : 1.0f) : 0.0f;
+    float mask = tid < D3 ? (use_mask ? ldg(M) : 1.0f) : 0.0f;
     float xval = mask != 0.0 ? load(X) * mask * scale : -FLT_MAX;
 
     KeyVal init;
@@ -339,7 +339,7 @@ __global__ void masked_softmax(
         {
             mask[i] = 0.0f;
             if (ti + i*32 < D3)
-                mask[i] = __ldg(M + i*32);
+                mask[i] = ldg(M + i*32);
         }
     }
     // Load X
@@ -452,7 +452,7 @@ __global__ void __launch_bounds__(32) masked_softmax2(
     #pragma unroll 2
     for (uint d3 = tid, xi = offsetX, mi = offsetM; d3 < D3; d3 += 32, xi += 32, mi += 32)
     {
-        float m = use_mask ? __ldg(add_ptr_u(M, mi)) : 1.0f;
+        float m = use_mask ? ldg(add_ptr_u(M, mi)) : 1.0f;
         float x = m != 0.0 ? load(add_ptr_u(X, xi)) * m * scale : -FLT_MAX;
 
         max_x = fmaxf(max_x, x);
@@ -464,7 +464,7 @@ __global__ void __launch_bounds__(32) masked_softmax2(
     #pragma unroll 2
     for (uint d3 = tid, xi = offsetX, mi = offsetM; d3 < D3; d3 += 32, xi += 32, mi += 32)
     {
-        float m = use_mask ? __ldg(add_ptr_u(M, mi)) : 1.0f;
+        float m = use_mask ? ldg(add_ptr_u(M, mi)) : 1.0f;
         float x = m != 0.0 ? load(add_ptr_u(X, xi)) * m * scale : -FLT_MAX;
 
         exp_sum += expf(x - max_x);
@@ -477,7 +477,7 @@ __global__ void __launch_bounds__(32) masked_softmax2(
     #pragma unroll 2
     for (uint d3 = tid, xi = offsetX, mi = offsetM; d3 < D3; d3 += 32, xi += 32, mi += 32)
     {
-        float m = use_mask ? __ldg(add_ptr_u(M, mi)) : 1.0f;
+        float m = use_mask ? ldg(add_ptr_u(M, mi)) : 1.0f;
         float x = m != 0.0 ? load(add_ptr_u(X, xi)) * m * scale : -FLT_MAX;
 
         float y = expf(x - max_x)  * rcp_exp_sum;
@@ -529,7 +529,7 @@ __global__ void masked_softmax_grad(
         {
             mask[i] = 0.0f;
             if (ti + i*32 < D3)
-                mask[i] = __ldg(M + i*32);
+                mask[i] = ldg(M + i*32);
         }
     }
     // Load DY
@@ -627,7 +627,7 @@ __global__ void __launch_bounds__(32) masked_softmax_grad2(
     {
         float dy = load(add_ptr_u(DY, offsetY));
         float  y = load(add_ptr_u(Y,  offsetY));
-        float  m = use_mask ? __ldg(add_ptr_u(M,  offsetM)) : 1.0f;
+        float  m = use_mask ? ldg(add_ptr_u(M,  offsetM)) : 1.0f;
 
         float dx = (dy - sum_dy_y) * y * m * scale;
 
@@ -705,7 +705,7 @@ __global__ void __launch_bounds__(256) transpose_64x64_2D(T* B, const T* A, uint
     // Dims need to be even multiples of 4
     if (x < dimAX && y < dimAY)
         for (uint i = 0; i < 4; ++i)
-            *(V4*)&Share[ty][i*64 + tx*4] = __ldg((const V4*)(A + (offsetA + i*dimAX)));
+            *(V4*)&Share[ty][i*64 + tx*4] = ldg((const V4*)(A + (offsetA + i*dimAX)));
 
     __syncthreads();
 
@@ -843,7 +843,7 @@ __global__ void __launch_bounds__(1024,BLOCKS) softmax_cross_entropy(
         ew_set(logits[i], 0xfc00fc00); //-inf, -inf
 
         if (k + i*VSIZE*32 < K)
-            logits[i] = __ldg((const T*)(Logits + i*VSIZE*32));
+            logits[i] = ldg((const T*)(Logits + i*VSIZE*32));
     }
 
     // reduce within thread
@@ -909,7 +909,7 @@ __global__ void __launch_bounds__(1024,BLOCKS) softmax_cross_entropy(
     }
     float rcp_exp_sum = ew_rcp(exp_sum) * (1.0f/32768.0f); // undo fp16 scaling
 
-    uint label = (uint)__ldg(Labels + idx_N);
+    uint label = (uint)ldg(Labels + idx_N);
 
     Grad += offset;
     asm("mov.b64 %0, %0;" : "+l"(Grad) : );

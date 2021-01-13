@@ -30,9 +30,9 @@ __global__ void __launch_bounds__(THREADS) quantize(uint* E, T* Y, const T* X, f
         }
         else if (STOCHASTIC == 2)
         {
-            lfsr0 = __ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*0 + bid*THREADS + tid));
-            lfsr1 = __ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*1 + bid*THREADS + tid));
-            lfsr2 = __ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*2 + bid*THREADS + tid));
+            lfsr0 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*0 + bid*THREADS + tid));
+            lfsr1 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*1 + bid*THREADS + tid));
+            lfsr2 = ldg(add_ptr_u((const uint*)E, gridDim.x*THREADS*2 + bid*THREADS + tid));
         }
 
         #pragma unroll 1

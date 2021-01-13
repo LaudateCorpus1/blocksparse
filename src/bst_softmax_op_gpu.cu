@@ -57,7 +57,7 @@ __global__ void __launch_bounds__(1024,BLOCKS) bst_masked_softmax(
                 uint2 entry  = Lut[i];
                 uint blk_id  = entry.x;
                 LutOffset[i] = blk_id * BSIZE*BSIZE;
-                mask = use_mask ? __ldg(Mask + blk_id) : 0xffffffffffffffff;
+                mask = use_mask ? ldg(Mask + blk_id) : 0xffffffffffffffff;
             }
             LutMask64[i] = mask;
         }
@@ -69,7 +69,7 @@ __global__ void __launch_bounds__(1024,BLOCKS) bst_masked_softmax(
                 uint2 entry  = Lut[i];
                 uint blk_id  = entry.x;
                 LutOffset[i] = blk_id * BSIZE*BSIZE;
-                mask = use_mask ? (uint)__ldg(Mask + blk_id) : 0xffffffff;
+                mask = use_mask ? (uint)ldg(Mask + blk_id) : 0xffffffff;
             }
             LutMask32[i] = mask;
         }
@@ -92,7 +92,7 @@ __global__ void __launch_bounds__(1024,BLOCKS) bst_masked_softmax(
             ew_set(xval[i], 0xff80ff80); //-inf, -inf
 
             if (lut_idx + i < lut_size)
-                xval[i] = __ldg((const bhalf2*)(X + i*BSIZE*BSIZE));
+                xval[i] = ldg((const bhalf2*)(X + i*BSIZE*BSIZE));
         }
 
         // split the 64 bit mask by half warp
@@ -251,8 +251,8 @@ __global__ void __launch_bounds__(1024,BLOCKS) bst_masked_softmax_grad(
 
             if (lut_idx + i < lut_size)
             {
-                dy[i] = __ldg((const V2*)(DY + i*BSIZE*BSIZE));
-                 y[i] = __ldg((const V2*)( Y + i*BSIZE*BSIZE));
+                dy[i] = ldg((const V2*)(DY + i*BSIZE*BSIZE));
+                 y[i] = ldg((const V2*)( Y + i*BSIZE*BSIZE));
             }
         }
 

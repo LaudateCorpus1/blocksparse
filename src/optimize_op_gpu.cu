@@ -14,7 +14,7 @@ template <typename T, typename V>
 __global__ void adafactor_row_variance(
     float* RV, float* RV_MEAN, const T* __restrict__ Grad, const float* __restrict__ Norm, float grad_scale, float decay, float epsilon, uint K, float rcpC, float rcpK, float saturate, uint zero_infs, uint zero_nans, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     // skip all optimization if the global norm is bad.
     if (norm_scale != 0.0f)
@@ -74,7 +74,7 @@ __global__ void adafactor_row_variance(
             row_var *= rcpK;
 
             RV += c;
-            float old_rv = __ldg((const float*)RV);
+            float old_rv = ldg((const float*)RV);
 
             row_var = decay * old_rv + (1.0f - decay) * row_var;
             __stg(RV, row_var);
@@ -91,7 +91,7 @@ template <typename T, typename V, uint THREADS>
 __global__ void __launch_bounds__(THREADS) adafactor_col_variance(
     V* CV, const T* __restrict__ Grad, const float* __restrict__ Norm, float grad_scale, float decay, float epsilon, uint C, uint K, float rcpC, float saturate, uint zero_infs, uint zero_nans, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     // skip all optimization if the global norm is bad.
     if (norm_scale != 0.0f)
@@ -150,7 +150,7 @@ __global__ void __launch_bounds__(THREADS) adafactor_col_variance(
         {
             CV += k;
             V col_var = ew_mul(var_sum, rcpC);
-            V old_cv  = __ldg((const V*)CV);
+            V old_cv  = ldg((const V*)CV);
 
             col_var = ew_add(ew_mul(old_cv, decay), ew_mul(col_var, 1.0f - decay));
 
@@ -167,7 +167,7 @@ template <typename T, typename V>
 __global__ void adafactor_normalize_2d(
     V* X, float* RMS_X, const T* __restrict__ Grad, const float* __restrict__ Norm, const float* __restrict__ RV, const V* __restrict__ CV, const float* __restrict__ RV_MEAN, float grad_scale, uint K, float rcpCK, float saturate, uint zero_infs, uint zero_nans, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     // skip all optimization if the global norm is bad.
     if (norm_scale != 0.0f)
@@ -242,7 +242,7 @@ template <typename T>
 __global__ void __launch_bounds__(32) adafactor_normalize_1d(
     float* CV, float* X, float* RMS_X, const T* __restrict__ Grad, const float* __restrict__ Norm, float grad_scale, float decay, float epsilon, uint K, float rcpK, float saturate, uint zero_infs, uint zero_nans, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     // skip all optimization if the global norm is bad.
     if (norm_scale != 0.0f)
@@ -290,7 +290,7 @@ template <typename V>
 __global__ void adafactor_apply(
     V* P, const V* __restrict__ X, const float* __restrict__ RMS_X, const float* __restrict__ Norm, float learning_rate, float rcp_clip, uint size, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     // skip all optimization if the global norm is bad.
     if (norm_scale != 0.0f)
@@ -298,7 +298,7 @@ __global__ void adafactor_apply(
         uint tid = threadIdx.x;
         uint bid = blockIdx.x;
 
-        float update_rate = learning_rate / fmaxf(sqrtf(__ldg(RMS_X)) * rcp_clip, 1.0f);
+        float update_rate = learning_rate / fmaxf(sqrtf(ldg(RMS_X)) * rcp_clip, 1.0f);
 
         #pragma unroll 1
         for (uint i = bid*blockDim.x + tid; i < size; i += gridDim.x*blockDim.x)
@@ -374,7 +374,7 @@ __global__ void apply_lazy_emb_adam(
     const float* __restrict__ Norm,
     float lr, float decay_mean, float decay_var, float epsilon, float grad_scale, float clip_sigma, uint K, float saturate, uint zero_infs, uint zero_nans, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     if (norm_scale != 0.0f)
     {
@@ -459,7 +459,7 @@ __global__ void apply_adam(
     const float* __restrict__ Norm,
     float lr, float decay_mean, float decay_var, float epsilon, float grad_scale, float clip_sigma, uint size, float saturate, uint zero_infs, uint zero_nans, uint use_norm)
 {
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
 
     // skip all optimization if the global norm is bad.
     if (norm_scale != 0.0f)
@@ -553,7 +553,7 @@ __global__ void __launch_bounds__(THREADS) apply_adam_gated(
 {
     const uint U = BSIZE*BSIZE/THREADS;
 
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
     if (norm_scale != 0.0f)
     {
         uint bid = blockIdx.x;
@@ -637,7 +637,7 @@ __global__ void __launch_bounds__(THREADS) apply_blocksparse_adam(
 {
     const uint U = BSIZE*BSIZE/THREADS;
 
-    float norm_scale = use_norm ? __ldg(Norm) : 1.0f;
+    float norm_scale = use_norm ? ldg(Norm) : 1.0f;
     if (norm_scale != 0.0f)
     {
         grad_scale *= norm_scale;
@@ -645,7 +645,7 @@ __global__ void __launch_bounds__(THREADS) apply_blocksparse_adam(
         uint bid = blockIdx.x;
         uint tid = threadIdx.x;
 
-        float select = use_select ? __ldg(Select + bid) : 0.0f;
+        float select = use_select ? ldg(Select + bid) : 0.0f;
         float lr = select == 0.0f ? lr_old : lr_new;
 
         uint offset = bid*BSIZE*BSIZE + tid;
@@ -1188,7 +1188,7 @@ __global__ void compute_clip_norm(float* Norm, float* Scale, const float* SumSqu
     float sum_squared = 0.0f;
     #pragma unroll 1
     for (uint offset = tid; offset < tensor_cnt; offset += 1024)
-        sum_squared += __ldg(SumSquared + offset);
+        sum_squared += ldg(SumSquared + offset);
 
     // reduce within warp
     #pragma unroll

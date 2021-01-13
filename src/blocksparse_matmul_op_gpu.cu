@@ -1056,10 +1056,10 @@ __global__ void __launch_bounds__(32) gemm_blocksparse_08x64x08x8_updat(
             ew_zero(e0); ew_zero(e4);
             if (n < N)
             {
-                x0 = __ldg(X0);
-                x4 = __ldg(X4);
-                e0 = __ldg(E0);
-                e4 = __ldg(E4);
+                x0 = ldg(X0);
+                x4 = ldg(X4);
+                e0 = ldg(E0);
+                e4 = ldg(E4);
             }
 
             // Convert to float if needed and store to shared as transpose.
@@ -1277,8 +1277,8 @@ __global__ void __launch_bounds__(32) gemm_blocksparse_08x64x08x4_updat(
             ew_zero(e0); ew_zero(e2); ew_zero(e4); ew_zero(e6);
             if (bn)
             {
-                x0 = __ldg(X0+n); x2 = __ldg(X2+n); x4 = __ldg(X4+n); x6 = __ldg(X6+n);
-                e0 = __ldg(E0+n); e2 = __ldg(E2+n); e4 = __ldg(E4+n); e6 = __ldg(E6+n);
+                x0 = ldg(X0+n); x2 = ldg(X2+n); x4 = ldg(X4+n); x6 = ldg(X6+n);
+                e0 = ldg(E0+n); e2 = ldg(E2+n); e4 = ldg(E4+n); e6 = ldg(E6+n);
             }
             n += 16;
 
@@ -1490,8 +1490,8 @@ __global__ void __launch_bounds__(64) gemm_blocksparse_16x64x16x4_updat(
             ew_zero(e0); ew_zero(e1); ew_zero(e2); ew_zero(e3);
             if (n < N4)
             {
-                x0 = __ldg(X0+n); x1 = __ldg(X1+n); x2 = __ldg(X2+n); x3 = __ldg(X3+n);
-                e0 = __ldg(E0+n); e1 = __ldg(E1+n); e2 = __ldg(E2+n); e3 = __ldg(E3+n);
+                x0 = ldg(X0+n); x1 = ldg(X1+n); x2 = ldg(X2+n); x3 = ldg(X3+n);
+                e0 = ldg(E0+n); e1 = ldg(E1+n); e2 = ldg(E2+n); e3 = ldg(E3+n);
             }
             n += 16;
 
@@ -1704,10 +1704,10 @@ __global__ void __launch_bounds__(64) gemm_blocksparse_16x64x16x8_updat(
             ew_zero(e0); ew_zero(e8);
             if (n < N)
             {
-                x0 = __ldg(X0);
-                x8 = __ldg(X8);
-                e0 = __ldg(E0);
-                e8 = __ldg(E8);
+                x0 = ldg(X0);
+                x8 = ldg(X8);
+                e0 = ldg(E0);
+                e8 = ldg(E8);
             }
             __syncthreads();
 
@@ -1952,14 +1952,14 @@ __global__ void __launch_bounds__(128) gemm_blocksparse_32x64x32x8_xprop(
                 "}" : "=l"(W0),"=l"(X00),"=l"(X16) : "l"(W), "l"(X), "r"(entry.y), "r"(entry.x), "r"(entry.x + N*16*8*2) );
 
             // Fetch 8 rows at a time from W and X
-            TW w00 = __ldg(W0);
-            TW w16 = __ldg(W0 + 128);
+            TW w00 = ldg(W0);
+            TW w16 = ldg(W0 + 128);
             TX x00, x16;
             ew_zero(x00); ew_zero(x16);
             if (bn)
             {
-                x00 = __ldg(X00);
-                x16 = __ldg(X16);
+                x00 = ldg(X00);
+                x16 = ldg(X16);
             }
 
             __syncthreads();
@@ -2236,8 +2236,8 @@ __global__ void __launch_bounds__(128) gemm_blocksparse_32x64x32x4_xprop(
                 "}" : "=l"(X00),"=l"(X08),"=l"(X16),"=l"(X24), "=l"(W0) : "l"(X), "l"(W), "r"(entry.x), "r"(entry.y), "r"(N8) );
 
             // Fetch 8 rows at a time from W and X
-            TW w00 = __ldg(W0);
-            TW w16 = __ldg(W0 + 128);
+            TW w00 = ldg(W0);
+            TW w16 = ldg(W0 + 128);
             TX x00, x08, x16, x24;
             ew_zero(x00);
             ew_zero(x08);
@@ -2245,10 +2245,10 @@ __global__ void __launch_bounds__(128) gemm_blocksparse_32x64x32x4_xprop(
             ew_zero(x24);
             if (bn)
             {
-                x00 = __ldg(X00);
-                x08 = __ldg(X08);
-                x16 = __ldg(X16);
-                x24 = __ldg(X24);
+                x00 = ldg(X00);
+                x08 = ldg(X08);
+                x16 = ldg(X16);
+                x24 = ldg(X24);
             }
 
             __syncthreads();
@@ -2503,8 +2503,8 @@ __global__ void __launch_bounds__(256) gemm_blocksparse_32x64x32x8_updat(
             ew_zero(e0);
             if (n < N)
             {
-                x0 = __ldg(X0);
-                e0 = __ldg(E0);
+                x0 = ldg(X0);
+                e0 = ldg(E0);
             }
             __syncthreads();
 
@@ -2722,10 +2722,10 @@ __global__ void __launch_bounds__(256) gemm_blocksparse_32x64x32x4_updat(
             ew_zero(e16);
             if (n < N)
             {
-                x00 = __ldg(X00);
-                x16 = __ldg(X16);
-                e00 = __ldg(E00);
-                e16 = __ldg(E16);
+                x00 = ldg(X00);
+                x16 = ldg(X16);
+                e00 = ldg(E00);
+                e16 = ldg(E16);
             }
             __syncthreads();
 

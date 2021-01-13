@@ -15,7 +15,7 @@ __global__ void __launch_bounds__(1024) embedding_lookup(T* Y, const TI* __restr
 
         if (idx < nIdx)
         {
-            int emb = __ldg(add_ptr_u(I, idx));
+            int emb = ldg(add_ptr_u(I, idx));
 
             float w = load(add_ptr_u(W, emb*K + k), 0, emb >= 0 && emb < C);
 
@@ -35,7 +35,7 @@ __global__ void __launch_bounds__(1024) embedding_lookup_grad(float* DW, const T
 
         if (idx < nIdx)
         {
-            int emb = __ldg(add_ptr_u(I, idx));
+            int emb = ldg(add_ptr_u(I, idx));
 
             if (emb >= 0 && emb < C)
             {
@@ -72,7 +72,7 @@ __global__ void sorted_embedding_lookup_grad(float* DW, const TI* __restrict__ I
     init.iIdx = bid*blockDim.x + tid;
     if (init.iIdx < nIdx)
     {
-        init.iEmb = __ldg(add_ptr_u(I, init.iIdx));
+        init.iEmb = ldg(add_ptr_u(I, init.iIdx));
         if (init.iEmb < 0 || init.iEmb >= C)
             init.iEmb = -1;
     }

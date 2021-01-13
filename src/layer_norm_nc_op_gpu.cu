@@ -636,8 +636,8 @@ __global__ void __launch_bounds__(32) layer_norm_segmented_dg_db_nc(
     float gain = 1.0f, bias = 0.0f, dg = 0.0f, db = 0.0f;
     if (b && relu)
     {
-        gain = __ldg(add_ptr_u(Gain, k));
-        bias = __ldg(add_ptr_u(Bias, k));
+        gain = ldg(add_ptr_u(Gain, k));
+        bias = ldg(add_ptr_u(Bias, k));
     }
     #pragma unroll 1
     for (uint n = bn, m = bs*N + bn, nk = bn*SK + k; n < N; n += gridDim.x, m += gridDim.x, nk += SKz)
@@ -709,8 +709,8 @@ __global__ void layer_norm_segmented_dx_nc(
 
     uint offset = n*SK + k;
 
-    float mean = __ldg(add_ptr_u(Mean, m));
-    float rstd = __ldg(add_ptr_u(Rstd, m));
+    float mean = ldg(add_ptr_u(Mean, m));
+    float rstd = ldg(add_ptr_u(Rstd, m));
 
     X    = add_ptr_u(X,  offset);
     DY   = add_ptr_u(DY, offset);

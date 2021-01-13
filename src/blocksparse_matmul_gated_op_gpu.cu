@@ -656,10 +656,10 @@ __global__ void __launch_bounds__(32) gemm_blocksparse_gated_08x64x08x8_updat(
             ew_zero(e0); ew_zero(e4);
             if (n < N)
             {
-                x0 = __ldg(X0);
-                x4 = __ldg(X4);
-                e0 = __ldg(E0);
-                e4 = __ldg(E4);
+                x0 = ldg(X0);
+                x4 = ldg(X4);
+                e0 = ldg(E0);
+                e4 = ldg(E4);
             }
 
             // Convert to float if needed and store to shared as transpose.
@@ -887,8 +887,8 @@ __global__ void __launch_bounds__(32) gemm_blocksparse_gated_08x64x08x4_updat(
             ew_zero(e0); ew_zero(e2); ew_zero(e4); ew_zero(e6);
             if (bn)
             {
-                x0 = __ldg(X0+n); x2 = __ldg(X2+n); x4 = __ldg(X4+n); x6 = __ldg(X6+n);
-                e0 = __ldg(E0+n); e2 = __ldg(E2+n); e4 = __ldg(E4+n); e6 = __ldg(E6+n);
+                x0 = ldg(X0+n); x2 = ldg(X2+n); x4 = ldg(X4+n); x6 = ldg(X6+n);
+                e0 = ldg(E0+n); e2 = ldg(E2+n); e4 = ldg(E4+n); e6 = ldg(E6+n);
             }
             n += 16;
 
