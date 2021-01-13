@@ -430,70 +430,320 @@ __device__ __forceinline__ mhalf  to_mhalf(float  v)
     return r;
 }
 
-__device__ __forceinline__ ehalf __ldg(const ehalf *ptr)
+__device__ __forceinline__ float ldg(const float *ptr)
 {
-    ehalf ret;
-    asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ bhalf __ldg(const bhalf *ptr)
+__device__ __forceinline__ char ldg(const char *ptr)
 {
-    bhalf ret;
-    asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ vhalf __ldg(const vhalf *ptr)
+__device__ __forceinline__ signed char ldg(const signed char *ptr)
 {
-    vhalf ret;
-    asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ mhalf __ldg(const mhalf *ptr)
+__device__ __forceinline__ unsigned char ldg(const unsigned char *ptr)
 {
-    mhalf ret;
-    asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ short ldg(const short *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ int ldg(const int *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ long ldg(const long *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ unsigned short ldg(const unsigned short *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ unsigned int ldg(const unsigned int *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ unsigned long ldg(const unsigned long *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ unsigned long long ldg(const unsigned long long *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ char2 ldg(const char2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ char4 ldg(const char4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ short2 ldg(const short2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ short4 ldg(const short4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ int2 ldg(const int2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ int4 ldg(const int4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ uchar4 ldg(const uchar4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ ushort2 ldg(const ushort2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ ushort4 ldg(const ushort4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ uint2 ldg(const uint2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ uint4 ldg(const uint4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ float2 ldg(const float2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ float4 ldg(const float4 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ double ldg(const double *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ double2 ldg(const double2 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        return ldg(ptr);
+    #else
+        return *ptr;
+    #endif
 }
 
-__device__ __forceinline__ ehalf2 __ldg(const ehalf2 *ptr)
+
+__device__ __forceinline__ ehalf ldg(const ehalf *ptr)
 {
-    ehalf2 ret;
-    asm volatile ("ld.global.nc.u32 %0, [%1];" : "=r"(ret.x) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        ehalf ret;
+        asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ bhalf2 __ldg(const bhalf2 *ptr)
+__device__ __forceinline__ bhalf ldg(const bhalf *ptr)
 {
-    bhalf2 ret;
-    asm volatile ("ld.global.nc.u32 %0, [%1];" : "=r"(ret.x) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        bhalf ret;
+        asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ vhalf ldg(const vhalf *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        vhalf ret;
+        asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ mhalf ldg(const mhalf *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        mhalf ret;
+        asm volatile ("ld.global.nc.u16 %0, [%1];" : "=h"(ret.x) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
 }
 
-__device__ __forceinline__ ehalf4 __ldg(const ehalf4 *ptr)
+__device__ __forceinline__ ehalf2 ldg(const ehalf2 *ptr)
 {
-    ehalf4 ret;
-    asm volatile ("ld.global.nc.v2.u32 {%0, %1}, [%2];" : "=r"(ret.x), "=r"(ret.y) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        ehalf2 ret;
+        asm volatile ("ld.global.nc.u32 %0, [%1];" : "=r"(ret.x) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ bhalf4 __ldg(const bhalf4 *ptr)
+__device__ __forceinline__ bhalf2 ldg(const bhalf2 *ptr)
 {
-    bhalf4 ret;
-    asm volatile ("ld.global.nc.v2.u32 {%0, %1}, [%2];" : "=r"(ret.x), "=r"(ret.y) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        bhalf2 ret;
+        asm volatile ("ld.global.nc.u32 %0, [%1];" : "=r"(ret.x) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
 }
 
-__device__ __forceinline__ ehalf8 __ldg(const ehalf8 *ptr)
+__device__ __forceinline__ ehalf4 ldg(const ehalf4 *ptr)
 {
-    ehalf8 ret;
-    asm volatile ("ld.global.nc.v4.u32 {%0, %1, %2, %3}, [%4];" : "=r"(ret.x), "=r"(ret.y), "=r"(ret.z), "=r"(ret.w) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        ehalf4 ret;
+        asm volatile ("ld.global.nc.v2.u32 {%0, %1}, [%2];" : "=r"(ret.x), "=r"(ret.y) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ bhalf8 __ldg(const bhalf8 *ptr)
+__device__ __forceinline__ bhalf4 ldg(const bhalf4 *ptr)
 {
-    bhalf8 ret;
-    asm volatile ("ld.global.nc.v4.u32 {%0, %1, %2, %3}, [%4];" : "=r"(ret.x), "=r"(ret.y), "=r"(ret.z), "=r"(ret.w) : "l"(ptr));
-    return ret;
+    #if __CUDA_ARCH__ >= 320
+        bhalf4 ret;
+        asm volatile ("ld.global.nc.v2.u32 {%0, %1}, [%2];" : "=r"(ret.x), "=r"(ret.y) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
 }
-__device__ __forceinline__ float8 __ldg(const float8 *ptr)
+
+__device__ __forceinline__ ehalf8 ldg(const ehalf8 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        ehalf8 ret;
+        asm volatile ("ld.global.nc.v4.u32 {%0, %1, %2, %3}, [%4];" : "=r"(ret.x), "=r"(ret.y), "=r"(ret.z), "=r"(ret.w) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ bhalf8 ldg(const bhalf8 *ptr)
+{
+    #if __CUDA_ARCH__ >= 320
+        bhalf8 ret;
+        asm volatile ("ld.global.nc.v4.u32 {%0, %1, %2, %3}, [%4];" : "=r"(ret.x), "=r"(ret.y), "=r"(ret.z), "=r"(ret.w) : "l"(ptr));
+        return ret;
+    #else
+        return *ptr;
+    #endif
+}
+__device__ __forceinline__ float8 ldg(const float8 *ptr)
 {
     float8 ret;  // not used.
     return ret;
@@ -976,43 +1226,43 @@ __device__ __forceinline__ float _gelu_grad(float dz, float x, float a)
 }
 
 // default load non-coherent
-__device__ __forceinline__ float  load(const float*  __restrict__ in, int i=0, bool b=true) { float  v; ew_zero(v); if (b) v = __ldg(in + i); return v; }
-__device__ __forceinline__ float2 load(const float2* __restrict__ in, int i=0, bool b=true) { float2 v; ew_zero(v); if (b) v = __ldg(in + i); return v; }
-__device__ __forceinline__ float4 load(const float4* __restrict__ in, int i=0, bool b=true) { float4 v; ew_zero(v); if (b) v = __ldg(in + i); return v; }
+__device__ __forceinline__ float  load(const float*  __restrict__ in, int i=0, bool b=true) { float  v; ew_zero(v); if (b) v = ldg(in + i); return v; }
+__device__ __forceinline__ float2 load(const float2* __restrict__ in, int i=0, bool b=true) { float2 v; ew_zero(v); if (b) v = ldg(in + i); return v; }
+__device__ __forceinline__ float4 load(const float4* __restrict__ in, int i=0, bool b=true) { float4 v; ew_zero(v); if (b) v = ldg(in + i); return v; }
 __device__ __forceinline__ float8 load(const float8* __restrict__ in, int i=0, bool b=true) { float8 v; ew_zero(v); return v; } // not used
 
-__device__ __forceinline__ float  load(const ehalf*  __restrict__ in, int i=0, bool b=true) { ehalf  v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float2 load(const ehalf2* __restrict__ in, int i=0, bool b=true) { ehalf2 v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float4 load(const ehalf4* __restrict__ in, int i=0, bool b=true) { ehalf4 v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float8 load(const ehalf8* __restrict__ in, int i=0, bool b=true) { ehalf8 v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float  load(const ehalf*  __restrict__ in, int i=0, bool b=true) { ehalf  v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float2 load(const ehalf2* __restrict__ in, int i=0, bool b=true) { ehalf2 v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float4 load(const ehalf4* __restrict__ in, int i=0, bool b=true) { ehalf4 v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float8 load(const ehalf8* __restrict__ in, int i=0, bool b=true) { ehalf8 v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
 
-__device__ __forceinline__ float  load(const bhalf*  __restrict__ in, int i=0, bool b=true) { bhalf  v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float2 load(const bhalf2* __restrict__ in, int i=0, bool b=true) { bhalf2 v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float4 load(const bhalf4* __restrict__ in, int i=0, bool b=true) { bhalf4 v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float8 load(const bhalf8* __restrict__ in, int i=0, bool b=true) { bhalf8 v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float  load(const bhalf*  __restrict__ in, int i=0, bool b=true) { bhalf  v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float2 load(const bhalf2* __restrict__ in, int i=0, bool b=true) { bhalf2 v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float4 load(const bhalf4* __restrict__ in, int i=0, bool b=true) { bhalf4 v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float8 load(const bhalf8* __restrict__ in, int i=0, bool b=true) { bhalf8 v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
 
-__device__ __forceinline__ float  load(const mhalf*  __restrict__ in, int i=0, bool b=true) { mhalf  v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
-__device__ __forceinline__ float  load(const vhalf*  __restrict__ in, int i=0, bool b=true) { vhalf  v; ew_zero(v); if (b) v = __ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float  load(const mhalf*  __restrict__ in, int i=0, bool b=true) { mhalf  v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
+__device__ __forceinline__ float  load(const vhalf*  __restrict__ in, int i=0, bool b=true) { vhalf  v; ew_zero(v); if (b) v = ldg(in + i); return to_float(v); }
 
-__device__ __forceinline__  int   load(const  int*   __restrict__ in, int i=0, bool b=true) {  int v = 0;  if (b) v = __ldg(in + i); return v; }
-__device__ __forceinline__ uint   load(const uint*   __restrict__ in, int i=0, bool b=true) { uint v = 0;  if (b) v = __ldg(in + i); return v; }
+__device__ __forceinline__  int   load(const  int*   __restrict__ in, int i=0, bool b=true) {  int v = 0;  if (b) v = ldg(in + i); return v; }
+__device__ __forceinline__ uint   load(const uint*   __restrict__ in, int i=0, bool b=true) { uint v = 0;  if (b) v = ldg(in + i); return v; }
 
 
 // load into float array
-__device__ __forceinline__ void load(float* ret, const float*  __restrict__ in, int i=0, bool b=true) { float  v; ew_zero(v); if (b) v = __ldg(in + i); *(float *)ret = v; }
-__device__ __forceinline__ void load(float* ret, const float2* __restrict__ in, int i=0, bool b=true) { float2 v; ew_zero(v); if (b) v = __ldg(in + i); *(float2*)ret = v; }
-__device__ __forceinline__ void load(float* ret, const float4* __restrict__ in, int i=0, bool b=true) { float4 v; ew_zero(v); if (b) v = __ldg(in + i); *(float4*)ret = v; }
+__device__ __forceinline__ void load(float* ret, const float*  __restrict__ in, int i=0, bool b=true) { float  v; ew_zero(v); if (b) v = ldg(in + i); *(float *)ret = v; }
+__device__ __forceinline__ void load(float* ret, const float2* __restrict__ in, int i=0, bool b=true) { float2 v; ew_zero(v); if (b) v = ldg(in + i); *(float2*)ret = v; }
+__device__ __forceinline__ void load(float* ret, const float4* __restrict__ in, int i=0, bool b=true) { float4 v; ew_zero(v); if (b) v = ldg(in + i); *(float4*)ret = v; }
 __device__ __forceinline__ void load(float* ret, const float8* __restrict__ in, int i=0, bool b=true) { } // not used
 
-__device__ __forceinline__ void load(float* ret, const ehalf*  __restrict__ in, int i=0, bool b=true) { ehalf  v; ew_zero(v); if (b) v = __ldg(in + i); *(float *)ret = to_float(v); }
-__device__ __forceinline__ void load(float* ret, const ehalf2* __restrict__ in, int i=0, bool b=true) { ehalf2 v; ew_zero(v); if (b) v = __ldg(in + i); *(float2*)ret = to_float(v); }
-__device__ __forceinline__ void load(float* ret, const ehalf4* __restrict__ in, int i=0, bool b=true) { ehalf4 v; ew_zero(v); if (b) v = __ldg(in + i); *(float4*)ret = to_float(v); }
-__device__ __forceinline__ void load(float* ret, const ehalf8* __restrict__ in, int i=0, bool b=true) { ehalf8 v; ew_zero(v); if (b) v = __ldg(in + i); *(float8*)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const ehalf*  __restrict__ in, int i=0, bool b=true) { ehalf  v; ew_zero(v); if (b) v = ldg(in + i); *(float *)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const ehalf2* __restrict__ in, int i=0, bool b=true) { ehalf2 v; ew_zero(v); if (b) v = ldg(in + i); *(float2*)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const ehalf4* __restrict__ in, int i=0, bool b=true) { ehalf4 v; ew_zero(v); if (b) v = ldg(in + i); *(float4*)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const ehalf8* __restrict__ in, int i=0, bool b=true) { ehalf8 v; ew_zero(v); if (b) v = ldg(in + i); *(float8*)ret = to_float(v); }
 
-__device__ __forceinline__ void load(float* ret, const bhalf*  __restrict__ in, int i=0, bool b=true) { bhalf  v; ew_zero(v); if (b) v = __ldg(in + i); *(float *)ret = to_float(v); }
-__device__ __forceinline__ void load(float* ret, const bhalf2* __restrict__ in, int i=0, bool b=true) { bhalf2 v; ew_zero(v); if (b) v = __ldg(in + i); *(float2*)ret = to_float(v); }
-__device__ __forceinline__ void load(float* ret, const bhalf4* __restrict__ in, int i=0, bool b=true) { bhalf4 v; ew_zero(v); if (b) v = __ldg(in + i); *(float4*)ret = to_float(v); }
-__device__ __forceinline__ void load(float* ret, const bhalf8* __restrict__ in, int i=0, bool b=true) { bhalf8 v; ew_zero(v); if (b) v = __ldg(in + i); *(float8*)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const bhalf*  __restrict__ in, int i=0, bool b=true) { bhalf  v; ew_zero(v); if (b) v = ldg(in + i); *(float *)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const bhalf2* __restrict__ in, int i=0, bool b=true) { bhalf2 v; ew_zero(v); if (b) v = ldg(in + i); *(float2*)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const bhalf4* __restrict__ in, int i=0, bool b=true) { bhalf4 v; ew_zero(v); if (b) v = ldg(in + i); *(float4*)ret = to_float(v); }
+__device__ __forceinline__ void load(float* ret, const bhalf8* __restrict__ in, int i=0, bool b=true) { bhalf8 v; ew_zero(v); if (b) v = ldg(in + i); *(float8*)ret = to_float(v); }
 
 // load coherent
 __device__ __forceinline__ float  load_c(const float*  __restrict__ in, int i=0, bool b=true) { float  v; ew_zero(v); if (b) v = in[i]; return v; }

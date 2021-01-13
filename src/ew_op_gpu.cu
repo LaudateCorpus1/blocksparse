@@ -586,14 +586,14 @@ __global__ void concrete_gate(uint* Entropy, float* Gate, float* Concrete, const
 
     if (idx < size)
     {
-        uint lfsr0 = __ldg((const uint*)Entropy + (gridDim.x*blockDim.x*0 + idx));
-        uint lfsr1 = __ldg((const uint*)Entropy + (gridDim.x*blockDim.x*1 + idx));
-        uint lfsr2 = __ldg((const uint*)Entropy + (gridDim.x*blockDim.x*2 + idx));
+        uint lfsr0 = ldg((const uint*)Entropy + (gridDim.x*blockDim.x*0 + idx));
+        uint lfsr1 = ldg((const uint*)Entropy + (gridDim.x*blockDim.x*1 + idx));
+        uint lfsr2 = ldg((const uint*)Entropy + (gridDim.x*blockDim.x*2 + idx));
 
         #pragma unroll 1
         for (uint offset = idx; offset < size; offset += gridDim.x * blockDim.x)
         {
-            float loga = __ldg(LogA + offset);
+            float loga = ldg(LogA + offset);
 
             lfsr0 = ((lfsr0 & 0xfffffffe) << 12) ^ (((lfsr0 << 13) ^ lfsr0) >> 19);
             lfsr1 = ((lfsr1 & 0xfffffff8) <<  4) ^ (((lfsr1 << 2)  ^ lfsr1) >> 25);
@@ -622,8 +622,8 @@ __global__ void concrete_gate_grad(float* DLogA, const float* DGate, const float
     #pragma unroll 1
     for (uint offset = idx; offset < size; offset += gridDim.x * blockDim.x)
     {
-        float dgate    = __ldg(DGate    + offset);
-        float concrete = __ldg(Concrete + offset);
+        float dgate    = ldg(DGate    + offset);
+        float concrete = ldg(Concrete + offset);
 
         float stretch   = concrete * (limit_b - limit_a) + limit_a;
         float d_tanh    = stretch >= 0.0 && stretch <= 1.0 ? dgate : 0.0f;
@@ -642,7 +642,7 @@ __global__ void concrete_gate_infer(float* Gate, const float* LogA, float limit_
     #pragma unroll 1
     for (uint offset = idx; offset < size; offset += gridDim.x * blockDim.x)
     {
-        float loga = __ldg(LogA + offset);
+        float loga = ldg(LogA + offset);
 
         float stretch  = ew_sig(loga) * (limit_b - limit_a) + limit_a;
         float gate     = fminf(fmaxf(stretch, 0.0f), 1.0f);
@@ -694,9 +694,9 @@ __global__ void __launch_bounds__(1024) gen_dropout_mask(uint* Entropy, uint* Ma
 
     if (offsetM < size32)
     {
-        uint lfsr0 = __ldg((const uint*)Entropy + (gridDim.x*blockDim.x*0 + idx));
-        uint lfsr1 = __ldg((const uint*)Entropy + (gridDim.x*blockDim.x*1 + idx));
-        uint lfsr2 = __ldg((const uint*)Entropy + (gridDim.x*blockDim.x*2 + idx));
+        uint lfsr0 = ldg((const uint*)Entropy + (gridDim.x*blockDim.x*0 + idx));
+        uint lfsr1 = ldg((const uint*)Entropy + (gridDim.x*blockDim.x*1 + idx));
+        uint lfsr2 = ldg((const uint*)Entropy + (gridDim.x*blockDim.x*2 + idx));
 
         #pragma unroll 1
         for (uint offset = offsetM; offset < size32; offset += gridDim.x * blockDim.x/32)
@@ -757,7 +757,7 @@ __global__ void __launch_bounds__(THREADS) apply_dropout_mask(
             offsetM += x_idx[i] * m.stride[i];
 
         V    xval =  load(X + offsetX);
-        uint mask = __ldg(M + offsetM/32);
+        uint mask = ldg(M + offsetM/32);
 
         uint shift = offsetM & 31;
         for (uint i = 0; i < VSIZE; i++)
@@ -1048,7 +1048,7 @@ __global__ void bias_relu_axis_0_grad(
 
     uint tid = threadIdx.x;
     uint   k = blockIdx.x;
-    float  b = RELU ? __ldg(B + k) : 0.0f;
+    float  b = RELU ? ldg(B + k) : 0.0f;
 
     if (tid < 32)
         Share[tid] = 0.0f;
@@ -1588,7 +1588,7 @@ __global__ void reduce_column_max_grad(
         uint offset_dy = idx0*dim2      + idx2;
         uint offset_dx = idx0*dim2*dim1 + idx2;
 
-        uint  idx_max = __ldg(add_ptr_u(A, offset_dy));
+        uint  idx_max = ldg(add_ptr_u(A, offset_dy));
         float dy = load(add_ptr_u(DY, offset_dy));
 
         for (uint idx1 = 0; idx1 < dim1; idx1++)
